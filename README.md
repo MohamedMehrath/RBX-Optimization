@@ -1,6 +1,7 @@
 # RBX-Optimization
 
 ## Stable Vulkan
+```json
 {
 "FFlagDebugGraphicsDisableVulkan": false,
 "FFlagDebugGraphicsDisableVulkan11": false,
@@ -10,18 +11,24 @@
 "FFlagRenderEnableGlobalInstancingVulkan": true,
 "FFlagDebugGraphicsPreferD3D11": "false"
 }
+```
 
 ## Blue Theme
+```json
 {
 "FFlagLuaAppEnableFoundationColors7": "True"
 } 
+```
 
 ## Disable Fullscreen Titlebar
+```json
 {
     "FIntFullscreenTitleBarTriggerDelayMillis": 3600000
 }
+```
 
 ## Disable Telemetry
+```json
 {
   "FFlagDebugDisableTelemetryEphemeralCounter": true,
 	"FFlagDebugDisableTelemetryEphemeralStat": true,
@@ -31,21 +38,28 @@
 	"FFlagDebugDisableTelemetryV2Event": true,
 	"FFlagDebugDisableTelemetryV2Stat": true
 }
+```
 
 ## Verified User Id
+```json
 {
 "FStringWhitelistVerifiedUserId": "946070340"
 }
+```
 
 ## Increased Particles on low graphics
+```json
 {
     "FFlagDebugDeterministicParticles" : "True"
 }
+```
 
 ## Force Graphics Quality Level
+```json
 {
     "FIntRomarkStartWithGraphicQualityLevel": "1"
 }
+```
 
 ### Low Graphics Quality w/ Max Render Distance/FRM Quality Levels
 > [!TIP]
