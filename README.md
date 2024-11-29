@@ -13,6 +13,19 @@
 }
 ```
 
+### - DirectX10:
+```json
+{
+    "FFlagDebugGraphicsPreferD3D11": "false",
+    "FFlagDebugGraphicsPreferD3D11FL10": "true",
+    "FFlagGraphicsEnableD3D10Compute": "true",
+    "FFlagRenderEnableGlobalInstancingD3D10": "true",
+    "FFlagRenderEnableGlobalInstancingD3D11": "false"
+}
+```
+> [!TIP]
+>## - You cant use future lightining with dx10!
+
 ## Blue Theme
 ```json
 {
