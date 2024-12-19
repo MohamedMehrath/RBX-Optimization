@@ -1,4 +1,4 @@
-```
+```json
 {
   "FLogNetwork": "7",
   "FFlagHandleAltEnterFullscreenManually": "False",
