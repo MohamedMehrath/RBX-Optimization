@@ -1,3 +1,4 @@
+``` json
 {
   "FLogNetwork": "7",
   "FFlagHandleAltEnterFullscreenManually": "False",
@@ -237,3 +238,4 @@
   "FFlagRenderEnableGlobalInstancingVulkan": "True",
   "DFFlagDebugPauseVoxelizer_PlaceFilter": "True;2753915549"
 }
+```
