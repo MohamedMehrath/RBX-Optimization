@@ -8,7 +8,6 @@
     "DFIntLCCageDeformLimit": -1,
     "DFIntMaxActiveAnimationTracks": 0,
     "DFIntTextureCompositorActiveJobs": 0,
-    "FFlagAvatarChatIncludeSelfViewOnTelemetry": false,
     "FFlagCoreGuiSelfViewVisibilityFixed": false,
     "FFlagDebugDontRenderScreenGui": true,
     "FFlagDebugDontRenderUI": true,
