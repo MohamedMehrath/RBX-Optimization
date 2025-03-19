@@ -43,7 +43,7 @@ These flags control the use of the Vulkan graphics API.
 
 ```json
 {
-  "DFFlagDebugGraphicsDisableVulkan": false,
+  "FFlagDebugGraphicsDisableVulkan": false,
   "FFlagDebugGraphicsPreferVulkan": true,
   "FFlagDebugVulkanDisablePreRotate": false,
   "FFlagGraphicsVulkanBonusMemory": true,
