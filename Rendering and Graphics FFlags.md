@@ -24,7 +24,6 @@ These flags control core rendering behaviors and settings.
   "FFlagRenderSkipReadingShaderData": false,
   "FFlagRemovedRbxRenderingPreProcessor": false,
   "DFIntRenderingThrottleDelayInMS": 20,
-  "FIntRenderGrassDetailStrands": 0,
   "FIntRenderLocalLightFadeInMs": 0,
   "FIntRenderLocalLightUpdatesMax": 8,
   "FIntRenderLocalLightUpdatesMin": 6,
@@ -33,7 +32,7 @@ These flags control core rendering behaviors and settings.
   "FIntRenderShaderLoadAnalyticsHundredthPercent": 0,
   "FIntRenderShadowIntensity": 0,
   "FIntRenderShadowmapBias": 0,
-    "FIntDefaultJitterN": 0
+  "FIntDefaultJitterN": 0
 }
 ```
 
@@ -97,7 +96,7 @@ These flags control particle effects.
   "FFlagFixOutdatedTimeScaleParticles": false,
   "FFlagFixParticleAttachmentCulling": false,
   "FFlagFixParticleEmissionBias2": false,
-    "FFlagDebugDeterministicParticles": false
+  "FFlagDebugDeterministicParticles": false
 }
 ```
 
@@ -134,7 +133,7 @@ These flags relate to texture handling and settings.
   "FIntTerrainOTAMaxTextureSize": 1024,
   "FIntUITextureMaxRenderTextureSize": 1024,
   "FIntUITextureMaxUpdateDepth": 1,
-    "FFlagPreloadTextureItemsOption4": true
+  "FFlagPreloadTextureItemsOption4": true
 }
 ```
 
@@ -159,7 +158,8 @@ These flags control grass rendering.
   "FIntFRMMaxGrassDistance": 0,
   "FIntFRMMinGrassDistance": 0,
   "FIntGrassMovementReducedMotionFactor": 0,
-   "FFlagRenderFixGrassPrepass": false
+  "FIntRenderGrassDetailStrands": 0,
+  "FFlagRenderFixGrassPrepass": false
 }
 ```
 
@@ -190,7 +190,7 @@ These flags are related to graphics performance optimizations.
   "DFFlagDebugUseOcclusionQueries": true,
   "FFlagFastGPULightCulling3": true,
   "FFlagOcclusionCullingBetaFeature": true,
-   "DFFlagGraphicsOptimizationModeMVPExposureEnrollment4": false,
+  "DFFlagGraphicsOptimizationModeMVPExposureEnrollment4": false,
   "DFIntGraphicsOptimizationModeMaxFrameTimeTargetMs": 33
 }
 ```
