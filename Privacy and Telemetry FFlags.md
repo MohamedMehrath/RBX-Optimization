@@ -60,8 +60,6 @@ These flags control the collection and reporting of various telemetry data.
   "DFFlagEnablePercentileTelemetry": false,
   "DFFlagEnableTelemetryV2FRMStats": false,
   "DFFlagEphemeralCounterInfluxReportingEnabled": false,
-  "DFFlagFrameTimeStdDev": false,
-  "DFFlagGpuVsCpuBoundTelemetry": false,
   "DFFlagGraphicsQualityUsageTelemetry": false,
   "DFFlagLegacyRedundantPlayerCheckAnalytics": false,
   "DFFlagProximityPromptAnalytics": false,
