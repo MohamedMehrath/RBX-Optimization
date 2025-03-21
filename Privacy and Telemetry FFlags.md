@@ -132,7 +132,6 @@ These flags control crash reporting functionality.
   "FFlagEnableBacktraceConnectionDidFailHandler": false,
   "FFlagEnableBacktraceMissingLogReport": false,
   "FFlagEnableBacktraceResponseHandler": false,
-  "FFlagRolloutFlagCrashDataMacClient": false,
   "FFlagUserAgentInBacktraceReports": false,
   "FFlagWin32BacktraceWindowsLaunchType": false,
   "FIntLuaAppBacktraceErrorReportPercentage": 0
