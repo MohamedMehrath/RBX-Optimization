@@ -553,11 +553,21 @@ Activates a suite of beta features allowing users to adjust the text size across
 *   **JSON Example:**
     ```json
     {
+       "FFlagEnablePreferredTextSizeConnection": true,
        "FFlagEnablePreferredTextSizeGuiService": true,
        "FFlagEnablePreferredTextSizeScale": true,
+       "FFlagEnablePreferredTextSizeScalePerLayerCollector": true,
        "FFlagEnablePreferredTextSizeSettingInMenus2": true,
-       "FIntPreferredTextSizeSettingBetaFeatureRolloutPercent": 100,
-       "FFlagEnablePreferredTextSizeStyleFixesInAppShell3": true
+       "FFlagEnablePreferredTextSizeStyleFixesAddFriends": true,
+       "FFlagEnablePreferredTextSizeStyleFixesGameTile": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInAppShell3": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInCaptureMenu": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInExperienceMenu": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInPlayerList": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInPurchasePrompt": true,
+       "FFlagEnablePreferredTextSizeStyleFixesInReportMenu": true,
+       "FFlagPreferredTextSizeSettingBetaFeature": true,
+       "FIntPreferredTextSizeSettingBetaFeatureRolloutPercent": 100
     }
     ```
 *   **Purpose:** Collectively enables an accessibility feature allowing users to select a preferred text size, which then scales text in supported UI elements like menus, player lists, prompts, etc.
@@ -3329,3 +3339,236 @@ Provides context on the `DFIntS2PhysicsSenderRate` flag, emphasizing its role in
 
 > [!TIP]
 > Increasing `DFIntS2PhysicsSenderRate` (e.g., to `30` or `60`, ensuring `DFIntPhysicsSenderMaxBandwidthBps` is also sufficient) can make interactions feel more responsive, especially in physics-heavy games, provided the network connection can handle the increased data rate.
+
+### Camera and Input
+
+#### Increase Decimal Precision for Camera Sensitivity
+Removes the 3-decimal digit limit imposed on the camera sensitivity setting, allowing for more precise values.
+
+*   **Flag:** `FFlagFixSensitivityTextPrecision`
+*   **JSON Example (Allow more digits):**
+    ```json
+    {
+       "FFlagFixSensitivityTextPrecision": "False"
+    }
+    ```
+*   **Purpose:** Reverts a change that limited sensitivity input to 3 decimal places. Setting to `False` disables this limitation.
+*   **Default Value:** `True` (limit enforced).
+*   **Effects:** Allows users to input camera sensitivity values with more than 3 decimal places (e.g., 5 digits like `0.84103`) in the settings menu for finer control.
+
+### UI and Client Behavior
+
+#### Disable Profile Picture Customization Feature
+Completely disables the ability to customize the avatar profile picture within the Roblox app/website.
+
+*   **Flag:** `FFlagAXDefaultAvatarToShopEnabled3`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagAXDefaultAvatarToShopEnabled3": "False"
+    }
+    ```
+*   **Purpose:** Disables the entry points or functionality related to the avatar profile picture editor.
+*   **Default Value:** `True`.
+*   **Effects:** Removes the options or buttons related to creating or editing the avatar profile picture. User's existing PFP remains, but cannot be changed while the flag is `False`.
+
+#### Customize Available Chat Translation Languages
+Allows specifying which languages are offered as options in the chat translation settings menu.
+
+*   **Flag:** `FStringChatTranslationEnabledLocales`
+*   **JSON Example (Default Languages):**
+    ```json
+    {
+       "FStringChatTranslationEnabledLocales": "es_es,fr_fr,pt_br,de_de,it_it,ja_jp,ko_kr,id_id,tr_tr,zh_cn,zh_tw,th_th,pl_pl,vi_vn,ru_ru,"
+    }
+    ```
+*   **JSON Example (French and Portuguese Only):**
+    ```json
+    {
+       "FStringChatTranslationEnabledLocales": "fr_fr,pt_br,"
+    }
+    ```
+*   **Purpose:** Defines the list of locale codes available for automatic chat translation. English is always included implicitly.
+*   **Default Value:** A string containing locale codes for all supported languages (see first example).
+*   **Effects:** Modifies the list of languages shown in the chat translation dropdown menu. Requires manual application via JSON editing, as standard FFlag tools might expect a boolean. Use standard locale codes (e.g., `es_es` for Spanish/Spain, `pt_br` for Portuguese/Brazil) separated by commas, including a trailing comma.
+
+#### Disable Toast Notifications
+Prevents pop-up ("toast") notifications from appearing, redirecting them to the notification center instead.
+
+*   **Flag:** `FFlagToastNotificationsProtocolEnabled2`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagToastNotificationsProtocolEnabled2": "False"
+    }
+    ```
+*   **Purpose:** Disables the protocol or system responsible for showing pop-up toast notifications.
+*   **Default Value:** `True`.
+*   **Effects:** Stops notifications (like friend requests, messages) from appearing as pop-ups over the game or menu. Notifications should still be accessible via the dedicated notification center/icon.
+
+#### Revert Marketplace Search Bar UI (Legacy Search)
+Reverts the search bar within the Roblox Marketplace/Avatar Shop to an older design.
+
+*   **Flag:** `FFlagAXSearchLandingPageIXPEnabled4`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagAXSearchLandingPageIXPEnabled4": "False"
+    }
+    ```
+*   **Purpose:** Disables a specific iteration (`IXPEnabled4`) of the newer search landing page/bar within the Avatar Shop experience.
+*   **Default Value:** `True`.
+*   **Effects:** Changes the visual appearance and potentially the layout/functionality of the search interface in the Marketplace back to a previous version.
+
+#### Apply Flags to Specific Games Only (_PlaceFilter Suffix)
+Allows applying a flag's effect only within specified Place IDs (games).
+
+*   **Mechanism:** Append `_PlaceFilter` to the end of an existing flag name.
+*   **Value Format:** `"TrueOrFalse;PlaceID1;PlaceID2;..."`
+    *   Start with `True` or `False` to set the flag's state.
+    *   Follow with a semicolon `;`.
+    *   Add the numerical Place ID of the first target game.
+    *   Add more Place IDs separated by semicolons if needed.
+*   **JSON Example (Pause Voxelizer only in game 12345 and 67890):**
+    ```json
+    {
+       "DFFlagDebugPauseVoxelizer_PlaceFilter": "True;12345;67890"
+    }
+    ```
+*   **Purpose:** To selectively enable or disable flags on a per-game basis.
+*   **Effects:** The flag will only take effect when the player is in one of the specified Place IDs. Outside of those places, the flag behaves as if it were not set (or uses its default value).
+
+> [!TIP]
+> This is extremely useful for applying performance-boosting flags that might break visuals in some games, or for enabling debug flags only in specific testing environments. You can find a game's Place ID from its URL on the Roblox website.
+
+#### Enhance Microprofiler UI (Big Buttons)
+Enables enhancements to the Microprofiler overlay UI, including larger buttons.
+
+*   **Flag:** `FFlagMicroprofilerBigButtons`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagMicroprofilerBigButtons": "True"
+    }
+    ```
+*   **Purpose:** Activates UI improvements for the Microprofiler (Shift + F1-F5).
+*   **Default Value:** `False`.
+*   **Effects:** Makes the buttons and potentially other elements within the Microprofiler interface larger and possibly easier to interact with.
+
+#### Remove Parental Controls Tab from Settings
+Hides the "Parental Controls" tab within the main settings menu.
+
+*   **Flag:** `FFlagLuaAppsEnableParentalControlsTab`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagLuaAppsEnableParentalControlsTab": "False"
+    }
+    ```
+*   **Purpose:** Disables the visibility of the Parental Controls section in settings.
+*   **Default Value:** `True`.
+*   **Effects:** Removes the Parental Controls tab from the settings interface. Note that related flags like `FFlagLuaAppEnableParentalControlExperiment` might also exist.
+
+#### Rename "Communication" Section on Game Details Page
+Changes the label for the section indicating voice chat support on a game's details page from "Communication" back to "Voice Enabled".
+
+*   **Flag:** `FFlagGameDetailsDecoupledCommunication`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagGameDetailsDecoupledCommunication": "False"
+    }
+    ```
+*   **Purpose:** Reverts a change that likely decoupled communication features (showing separate icons/info for text chat vs voice) under a general "Communication" heading.
+*   **Default Value:** `True`.
+*   **Effects:** Changes the label on the game details page back to specifically saying "Voice Enabled". May not indicate support for other communication features like text chat as clearly as the default setting.
+
+---
+
+### Performance and Rendering
+
+#### Dynamic Render Kilo Pixels Target
+Sets a target resolution in kilopixels for the dynamic resolution scaler. Requires `FFlagRenderDynamicResolutionScale12` to be `True`.
+
+*   **Flag:** `DFIntDebugDynamicRenderKiloPixels`
+*   **JSON Example (Target ~480p):**
+    ```json
+    {
+       "DFIntDebugDynamicRenderKiloPixels": "307" // (640*480 / 1000 = 307.2)
+    }
+    ```
+*   **JSON Example (Target ~720p):**
+    ```json
+    {
+       "DFIntDebugDynamicRenderKiloPixels": "922" // (1280*720 / 1000 = 921.6)
+    }
+    ```
+*   **JSON Example (Target ~1080p):**
+    ```json
+    {
+       "DFIntDebugDynamicRenderKiloPixels": "2074" // (1920*1080 / 1000 = 2073.6)
+    }
+    ```
+*   **Purpose:** Allows setting a specific target resolution (in thousands of pixels) for the dynamic resolution feature. The engine will try to dynamically scale down towards this target to maintain performance.
+*   **Default Value:** `-1` (indicating automatic/no specific target override).
+*   **Effects:** Forces the dynamic resolution scaler to aim for a specific pixel count. Lower values result in a more pixelated image but can significantly boost FPS. Higher values closer to the native resolution will have less impact. Calculate the target value by `(Width * Height) / 1000`.
+
+> [!IMPORTANT]
+> This flag only works if Dynamic Resolution Scaling is enabled (`FFlagRenderDynamicResolutionScale12` is `True`, which is the default). Setting a very low value (e.g., `1`) can drastically increase FPS at the cost of making the game look extremely pixelated.
+
+#### Configure HACD Point Sampling Distance
+Adjusts a parameter related to Hierarchical Approximate Convex Decomposition (HACD), potentially affecting physics collision mesh generation quality versus performance.
+
+*   **Flag:** `DFIntHACDPointSampleDistApartTenths`
+*   **JSON Example:**
+    ```json
+    {
+       "DFIntHACDPointSampleDistApartTenths": "0" // Example value, units are tenths
+    }
+    ```
+*   **Purpose:** HACD is used to break down complex meshes into simpler convex shapes for efficient physics collision. This flag likely controls the distance between sample points used in this decomposition process (in tenths of a unit).
+*   **Default Value:** Unknown positive integer.
+*   **Effects (User Reported):**
+    *   **Higher Values:** More simplified decomposition, potentially better performance (less complex collision geometry), lower visual fidelity of collision shapes.
+    *   **Lower Values (like 0):** More detailed decomposition, potentially higher quality collision shapes (closer to the original mesh), possibly higher performance cost.
+
+> [!NOTE]
+> The relationship between this value and performance/quality might be complex and depend on the specific meshes being processed. Experimentation may be needed.
+
+#### Move Pre-Render Phase Optimization (V1 & V2)
+Moves the 'prerender' task in the engine's frame pipeline to run concurrently with other tasks, aiming to improve performance, particularly in CPU-bound scenarios. V2 is an iteration on V1.
+
+*   **Flags:**
+    *   `FFlagMovePrerender`
+    *   `FFlagMovePrerenderV2`
+*   **JSON Example (Enable V1 & V2):**
+    ```json
+    {
+       "FFlagMovePrerender": "True",
+       "FFlagMovePrerenderV2": "True"
+    }
+    ```
+*   **Purpose:** By default, the main render thread waits for the 'prerender' task. This optimization moves it to run in parallel, potentially reducing wait times and increasing throughput. V2 is presumably an improved version.
+*   **Default Value:** `False` for both.
+*   **Effects:** Can significantly increase FPS (reports of ~25% gains in CPU-bound games) by improving pipeline parallelism. However, it increases frame latency (the delay between input and display).
+
+> [!WARNING]
+> *   Users report that `FFlagMovePrerenderV2` requires `FFlagMovePrerender` to also be `True` to function correctly.
+> *   This optimization is known to cause **instability**, **increased input delay**, and potentially **crashes when entering fullscreen (F11)**. Use with caution and be prepared for potential negative side effects despite the FPS gains. It is generally **not recommended** for stable gameplay.
+
+#### Reduce CPU Load via SIMD for Light Grid
+Enables the use of SIMD (Single Instruction, Multiple Data) CPU instructions for optimizing Light Grid calculations.
+
+*   **Flag:** `DFFlagLightGridSimdNew3`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagLightGridSimdNew3": "True"
+    }
+    ```
+*   **Purpose:** Leverages SIMD capabilities of modern CPUs to perform calculations related to the Light Grid (used for local lighting) more efficiently, processing multiple data points with single instructions.
+*   **Default Value:** `False`.
+*   **Effects:** Can reduce CPU load associated with lighting calculations, potentially freeing up CPU resources for other tasks or allowing the CPU to run at lower frequencies, which might indirectly improve overall performance or reduce power consumption.
+
+> [!TIP]
+> This is likely beneficial on CPUs with good SIMD support (most modern x86_64 processors). It targets a specific subsystem (LightGrid) for CPU optimization.
