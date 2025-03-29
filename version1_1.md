@@ -136,7 +136,7 @@ Adjusts the intensity or completely disables the swaying animation of decorative
 *   **Purpose:** Modifies the factor applied to grass movement calculations. Higher values increase the speed/amplitude of the sway. A value of `0` disables the movement entirely.
 *   **Default Value:** `5`.
 *   **Effects:**
-    *   High values (`999`): Creates exaggerated, fast grass swaying.
+    *   High values (`500`): Creates exaggerated, fast grass swaying.
     *   `0`: Makes grass static, potentially improving performance slightly in dense grass areas.
 
 ### Force Lower Quality Textures
@@ -3114,7 +3114,7 @@ This collection of flags targets various aspects of the experimental Vulkan rend
 *   **Effects:** Aims to improve stability, performance, and visual correctness when using the Vulkan rendering API. Disables unnecessary logging and analytics. Configures buffer limits and specific feature rollouts (like Future is Bright).
 
 > [!IMPORTANT]
-> This configuration is specifically for users forcing the Vulkan renderer (`FFlagDebugGraphicsPreferVulkan: "True"`). Vulkan itself is experimental on Roblox and may cause instability regardless of these flags. The `FLogNetwork: "7"` flag seems unrelated to Vulkan and might be an error in the original list. The blacklist strings are empty, meaning no devices are blacklisted by this configuration.
+> This configuration is specifically for users forcing the Vulkan renderer (`FFlagDebugGraphicsPreferVulkan: "True"`). Vulkan itself is experimental on Roblox and may cause instability regardless of these flags. The blacklist strings are empty, meaning no devices are blacklisted by this configuration.
 
 ---
 
