@@ -1647,3 +1647,1685 @@ Adjusts parameters used by the engine's memory utility calculations, influencing
 
 > [!CAUTION]
 > While potentially intended for tuning memory management, the example configuration appears to lead to significantly *higher* memory consumption. This might be beneficial on systems with ample RAM (e.g., 16GB+, especially 32GB) by allowing Roblox to utilize more memory freely, potentially reducing cache misses or loading, but could cause instability or performance issues on systems with less RAM (e.g., 8GB). Use with caution and monitor memory usage. Disabling Resizable BAR in NVIDIA settings was mentioned as a separate, potentially related tweak for memory management on newer GPUs.
+
+### Rendering and Graphics
+
+#### Use Older Collision Geometry System
+Opts out of a refactored collision geometry system, reverting to an older version.
+
+*   **Flag:** `DFFlagSimRefactorCollisionGeometry2`
+*   **JSON Example (Use Older System):**
+    ```json
+    {
+       "DFFlagSimRefactorCollisionGeometry2": "false"
+    }
+    ```
+*   **Purpose:** Disables the V2 refactoring of the collision geometry system.
+*   **Default Value:** `true` (Newer system enabled).
+*   **Effects:** Reverts to the previous collision system. Might be used to troubleshoot physics bugs potentially introduced by the V2 refactor, possibly at the cost of performance or other V2 improvements.
+
+#### Disable Shadows/Lighting via Pause Voxelizer
+Pauses the voxelizer component, which effectively disables dynamic shadows and potentially other lighting calculations dependent on it.
+
+*   **Flag:** `DFFlagDebugPauseVoxelizer`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagDebugPauseVoxelizer": "True"
+    }
+    ```
+*   **Purpose:** A debug flag to halt the operation of the voxel-based lighting system.
+*   **Default Value:** `False`.
+*   **Effects:** Disables features relying on the voxelizer, primarily dynamic shadows (like those from "ShadowMap" or "Future" lighting). This can significantly boost performance in complex lighting scenarios but drastically reduces visual fidelity.
+
+> [!WARNING]
+> This completely removes dynamic shadows and potentially other lighting effects, resulting in a very flat and unrealistic look. Use only for performance testing or specific low-fidelity needs.
+
+#### Flags for Skipping Rendering Tasks
+These flags control whether certain rendering steps are skipped, potentially improving performance at the cost of visual elements.
+
+*   **Flags:**
+    *   `FFlagRenderShadowSkipHugeCulling` (Skips shadow culling for very large objects)
+    *   `FFlagRenderSkipReadingShaderData` (Skips reading certain shader data)
+    *   `FFlagShoeSkipRenderMesh` (Skips rendering meshes specifically tagged as 'shoes')
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagRenderShadowSkipHugeCulling": "true",
+       "FFlagRenderSkipReadingShaderData": "false",
+       "FFlagShoeSkipRenderMesh": "true" // Example: Enable shoe skipping
+    }
+    ```
+*   **Purpose & Defaults:**
+    *   `FFlagRenderShadowSkipHugeCulling`: Default `true`. Optimizes shadow culling for large distant objects. Setting to `false` might force rendering but is likely less performant.
+    *   `FFlagRenderSkipReadingShaderData`: Default `true`. Skips reading certain shader data, likely an optimization. Setting to `false` forces reading, potentially for debugging or if the skipping causes issues.
+    *   `FFlagShoeSkipRenderMesh`: Default `false`. Setting to `true` specifically prevents shoe meshes from rendering.
+*   **Effects:** These offer fine-grained control over rendering skips. Skipping shoe rendering (`true`) can slightly improve performance if many characters are visible, but characters will appear shoeless. Disabling the other skips (`false`) might slightly decrease performance but could potentially fix rare visual glitches if the skipping logic was faulty.
+
+#### Improve Object Detail with Fractal Upsampling
+Forces the use of fractal upsampling techniques for grid-based details, potentially enhancing visual sharpness.
+
+*   **Flag:** `FFlagDebugGridForceFractalUpsample`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugGridForceFractalUpsample": "true"
+    }
+    ```
+*   **Purpose:** Enables fractal upsampling algorithms, which can generate more plausible detail when increasing the resolution of grid-based data (like textures or terrain details) compared to simple interpolation.
+*   **Default Value:** `false`.
+*   **Effects:** May improve the perceived detail and sharpness of textures or other grid-based visual elements, making them look less blurry or stretched when viewed up close or at higher resolutions.
+
+#### Combine Unified Lighting Grid with Specific Shadow Technologies
+Allows using the "Unified" lighting system primarily for the light grid while forcing the shadow rendering to use Future, ShadowMap, or Voxel technology explicitly.
+
+*   **Flags:**
+    *   `FFlagRenderUnifiedLighting11` / `FFlagRenderUnifiedLighting12` (Enable Unified system)
+    *   `FFlagDebugForceFutureIsBrightPhase3` (Force Future shadows)
+    *   `FFlagDebugForceFutureIsBrightPhase2` (Force ShadowMap shadows)
+    *   `DFFlagDebugRenderForceTechnologyVoxel` (Force Voxel shadows)
+*   **JSON Examples:**
+    *   **Unified Grid + Future Shadows:**
+        ```json
+        {
+           "FFlagRenderUnifiedLighting12": "true",
+           "FFlagDebugForceFutureIsBrightPhase3": "true",
+           "FFlagDebugForceFutureIsBrightPhase2": "false",
+           "DFFlagDebugRenderForceTechnologyVoxel": "false"
+        }
+        ```
+    *   **Unified Grid + ShadowMap Shadows:**
+        ```json
+        {
+           "FFlagRenderUnifiedLighting12": "true",
+           "FFlagDebugForceFutureIsBrightPhase3": "false",
+           "FFlagDebugForceFutureIsBrightPhase2": "true",
+           "DFFlagDebugRenderForceTechnologyVoxel": "false"
+        }
+        ```
+    *   **Unified Grid + Voxel Shadows:**
+        ```json
+        {
+           "FFlagRenderUnifiedLighting12": "true",
+           "FFlagDebugForceFutureIsBrightPhase3": "false",
+           "FFlagDebugForceFutureIsBrightPhase2": "false",
+           "DFFlagDebugRenderForceTechnologyVoxel": "true"
+        }
+        ```
+*   **Purpose:** Decouples the light grid calculation from the shadow rendering method when Unified lighting is enabled. This allows benefiting from potential Unified light grid optimizations while retaining the specific shadow characteristics of Future, ShadowMap, or Voxel.
+*   **Default Behavior:** When only `FFlagRenderUnifiedLighting12` is `True`, the shadow method often defaults to what the game specifies (e.g., ShadowMap), while the light grid uses Unified.
+*   **Effects:** Allows mixing and matching. For instance, using Unified Grid + Future Shadows could provide the visual quality of Future's shadows combined with potential performance benefits of the Unified light grid.
+
+> [!NOTE]
+> Use `FFlagRenderUnifiedLighting11` or `FFlagRenderUnifiedLighting12` depending on which is currently active in Roblox builds. Set only *one* shadow-forcing flag (`FFlagDebugForceFutureIsBrightPhase3`, `FFlagDebugForceFutureIsBrightPhase2`, `DFFlagDebugRenderForceTechnologyVoxel`) to `True` to select the desired shadow type.
+
+---
+
+### UI and Client Behavior
+
+#### Enable Darker Dark Theme Palettes
+Activates newer color palettes intended for UI theming, often resulting in a darker appearance for the "Dark" theme.
+
+*   **Flags:**
+    *   `FFlagLuaAppUseUIBloxColorPalettes1`
+    *   `FFlagUIBloxUseNewThemeColorPalettes`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagLuaAppUseUIBloxColorPalettes1": "True",
+       "FFlagUIBloxUseNewThemeColorPalettes": "True"
+    }
+    ```
+*   **Purpose:** Enables updated color definitions used by the UI framework (UIBlox).
+*   **Default Value:** `False` (or potentially `True` via rollout).
+*   **Effects:** Changes the specific shades of colors used throughout the Roblox application UI, particularly noticeable in the Dark theme which may appear darker or use different accent colors.
+
+#### Disable Voice Chat Functionality
+Completely disables voice chat features within the client.
+
+*   **Flag:** `DFFlagVoiceChat4`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagVoiceChat4": "False"
+    }
+    ```
+*   **Purpose:** Acts as a master switch to disable the voice chat system.
+*   **Default Value:** `True`.
+*   **Effects:** Prevents voice chat from functioning, hiding related UI elements (like the microphone icon) and stopping audio transmission/reception, without needing to disable it account-wide via Roblox settings.
+
+#### Redirect Top Bar / VC Badge Link
+Redirects the "Learn More" link associated with certain top-bar badges (like the Beta or Voice Chat badge) to a custom URL.
+
+*   **Flags:**
+    *   `FFlagTopBarUseNewBadge` (Potentially enables the badge display)
+    *   `FStringTopBarBadgeLearnMoreLink` (URL for general top-bar badges)
+    *   `FStringVoiceBetaBadgeLearnMoreLink` (URL specifically for the VC Beta badge)
+*   **JSON Example (Redirect to Google):**
+    ```json
+    {
+       "FFlagTopBarUseNewBadge": "True",
+       "FStringTopBarBadgeLearnMoreLink": "https://google.com",
+       "FStringVoiceBetaBadgeLearnMoreLink": "https://google.com"
+    }
+    ```
+*   **Purpose:** Allows customizing the destination of help/info links tied to specific UI badges.
+*   **Default Value:** URLs pointing to Roblox help pages.
+*   **Effects:** Clicking the "Learn More" link on the relevant badge opens the specified custom URL in the Roblox internal browser. Requires the specific badge to be active/visible (e.g., having VC enabled for the VC Beta badge).
+
+#### Prevent Top Bar UI Opacity Changes
+Stops the top-bar UI elements (like the Roblox menu button, chat icon) from becoming fully opaque when the main menu's background transparency is increased.
+
+*   **Flag:** `FFlagChromeUsePreferredTransparency`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagChromeUsePreferredTransparency": "false"
+    }
+    ```
+*   **Purpose:** Normally, the top-bar icons inherit transparency settings from the main escape menu background. Setting this to `false` disconnects that behavior.
+*   **Default Value:** `true`.
+*   **Effects:** Keeps the top-bar icons at their default semi-transparent state, regardless of the escape menu's background transparency setting. Purely a visual preference.
+
+#### Revert Escape Menu to V4 (No Hamburger/Mic Icons)
+Specifically targets the V4 (2023) escape menu appearance, ensuring the newer hamburger menu and microphone icons are *not* shown.
+
+*   **Flag:** `FFlagEnableInGameMenuChromeABTest4`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagEnableInGameMenuChromeABTest4": "False"
+    }
+    ```
+*   **Purpose:** Disables participation in the A/B test that introduced the redesigned top-bar icons (hamburger menu, new mic icon).
+*   **Default Value:** `True` (if enrolled) or `False`.
+*   **Effects:** If the V4 menu is active (e.g., by setting `FIntNewInGameMenuPercentRollout3` to `0`), this ensures the *original* V4 top-bar icons are used, not the newer ones.
+
+#### Revert Chat Tab UI (Experiment Override)
+Forces the chat UI to revert to an older layout by overriding an experiment flag with a non-default value.
+
+*   **Flag:** `FStringNewChatTabExperimentLayerValue`
+*   **JSON Example (Force Revert):**
+    ```json
+    {
+       "FStringNewChatTabExperimentLayerValue": "IAmARobloxEngineerFr" // Any value other than default works
+    }
+    ```
+*   **Purpose:** Overrides the layer value controlling the chat tab experiment. The default value is `"ShowNewChatTab"`. Providing any other string reverts the UI.
+*   **Default Value:** `"ShowNewChatTab"`.
+*   **Effects:** Changes the appearance and layout of the in-game chat interface back to a previous version. The specific string used in the example (`"IAmARobloxEngineerFr"`) is arbitrary; any non-default value should trigger the revert.
+
+> [!NOTE]
+> This method relies on providing an *invalid* or *non-default* value to an experiment flag to force a fallback behavior. It might break if Roblox changes how this experiment flag is handled.
+
+#### Re-enable and Customize "Events" Button
+Makes the "Events" button visible on the Roblox home page again and allows setting the URL it links to.
+
+*   **Flags:**
+    *   `FFlagPlatformEventEnabled2`
+    *   `FStringPlatformEventUrl`
+*   **JSON Example (Link to YouTube):**
+    ```json
+    {
+       "FFlagPlatformEventEnabled2": "True",
+       "FStringPlatformEventUrl": "https://www.youtube.com/"
+    }
+    ```
+*   **Purpose:** Re-enables the UI element for platform events (like "The Hunt") and sets its web link destination.
+*   **Default Value:** `False` for `FFlagPlatformEventEnabled2`, URL pointing to Roblox event pages for `FStringPlatformEventUrl`.
+*   **Effects:** Adds the "Events" button back to the main navigation, linking to the specified URL which opens in the Roblox internal browser. Replace `"https://www.youtube.com/"` with any desired valid URL.
+
+#### Disable Data Sharing Features / UI
+Attempts to disable features and UI elements related to Roblox's data sharing policies (CAP - California Privacy Act related).
+
+*   **Flags:**
+    *   `FFlagCAP1209EnableDataSharingUI4`
+    *   `FFlagCAP1544UseNewDataSharingRollout`
+    *   `FIntCAP1209DataSharingRolloutPercentage`
+    *   `FIntCAP1209DataSharingTOSVersion`
+    *   `FIntCAP1544DataSharingUserRolloutPercentage`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagCAP1209EnableDataSharingUI4": "false",
+       "FFlagCAP1544UseNewDataSharingRollout": "false",
+       "FIntCAP1209DataSharingRolloutPercentage": "0",
+       "FIntCAP1209DataSharingTOSVersion": "0",
+       "FIntCAP1544DataSharingUserRolloutPercentage": "0"
+    }
+    ```
+*   **Purpose:** Aims to opt-out of data sharing features and hide related UI prompts or settings by disabling related flags and setting rollout percentages to zero.
+*   **Default Values:** Vary depending on user region, account status, and active rollouts.
+*   **Effects:** May prevent certain data sharing functionalities or UI elements related to privacy settings (particularly for users under specific regulations like CCPA/CPRA) from appearing or being active.
+
+> [!IMPORTANT]
+> The effectiveness of these flags in completely stopping data sharing is uncertain and depends heavily on Roblox's backend implementation and compliance with regulations. They primarily target specific features and UI related to privacy controls.
+
+#### Force V2 Escape Menu via User ID (Alternative)
+An alternative method to force the V2 escape menu by specifying a User ID, potentially less reliable than percentage-based flags.
+
+*   **Flag:** `FStringNewInGameMenuForcedUserIds`
+*   **JSON Example:**
+    ```json
+    {
+       "FStringNewInGameMenuForcedUserIds": "YOUR_ROBLOX_ID"
+    }
+    ```
+*   **Purpose:** Forces the V2 menu specifically for the user whose ID is listed.
+*   **Default Value:** `""` (Empty string).
+*   **Effects:** If other menu flags allow, this forces the V2 menu for the specified user.
+
+> [!NOTE]
+> This method is generally considered less practical and potentially less reliable than using flags like `FIntNewInGameMenuPercentRollout3`. Requires knowing and inputting the specific User ID.
+
+---
+
+### Telemetry
+
+#### Disable Core Telemetry Components
+Disables various core components responsible for collecting and sending telemetry data.
+
+*   **Flags:**
+    *   `FFlagDebugDisableTelemetryEphemeralCounter`
+    *   `FFlagDebugDisableTelemetryEphemeralStat`
+    *   `FFlagDebugDisableTelemetryEventIngest`
+    *   `FFlagDebugDisableTelemetryPoint`
+    *   `FFlagDebugDisableTelemetryV2Counter`
+    *   `FFlagDebugDisableTelemetryV2Event`
+    *   `FFlagDebugDisableTelemetryV2Stat`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugDisableTelemetryEphemeralCounter": "True",
+       "FFlagDebugDisableTelemetryEphemeralStat": "True",
+       "FFlagDebugDisableTelemetryEventIngest": "True",
+       "FFlagDebugDisableTelemetryPoint": "True",
+       "FFlagDebugDisableTelemetryV2Counter": "True",
+       "FFlagDebugDisableTelemetryV2Event": "True",
+       "FFlagDebugDisableTelemetryV2Stat": "True"
+    }
+    ```
+*   **Purpose:** Provides switches to turn off different types of telemetry collection (counters, stats, event ingestion).
+*   **Default Value:** `False`.
+*   **Effects:** Significantly reduces the amount of diagnostic and usage data sent from the client to Roblox servers.
+
+> [!NOTE]
+> While these flags disable major telemetry pathways, Roblox may still collect data through other means. This set is considered effective for disabling the bulk of standard telemetry with minimal configuration "bloat".
+
+### Networking and Replication
+
+#### Enable Large Object Replicator (Experimental)
+Activates components of a replication system potentially optimized for handling large objects or data streams.
+
+*   **Flags:**
+    *   `FFlagLargeReplicatorRead2`
+    *   `FFlagLargeReplicatorWrite2`
+    *   `FFlagLargeReplicatorEnabled2`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagLargeReplicatorRead2": "True",
+       "FFlagLargeReplicatorWrite2": "True",
+       "FFlagLargeReplicatorEnabled2": "True"
+    }
+    ```
+*   **Purpose:** Enables specialized read, write, and general functionality pathways within the network replicator, possibly designed for better performance when dealing with large assets or frequent updates of large data chunks.
+*   **Default Value:** `false` for all.
+*   **Effects:** Could improve network performance and synchronization for experiences that involve replicating large objects (e.g., large models, terrain data streams), potentially reducing latency or visual stutter associated with their replication.
+
+#### Enable RakNet Polling
+Activates continuous polling within the RakNet networking library to check for network packets.
+
+*   **Flag:** `DFFlagRakNetEnablePoll`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagRakNetEnablePoll": "true"
+    }
+    ```
+*   **Purpose:** Enables a mode where the RakNet library actively and frequently checks for incoming/outgoing packets, rather than potentially relying solely on event-driven notifications.
+*   **Default Value:** `false`.
+*   **Effects:** Can improve network responsiveness and potentially reduce latency by processing packets more immediately. However, this continuous polling might slightly increase CPU usage compared to event-based handling.
+
+> [!TIP]
+> Enabling RakNet polling might be beneficial for users seeking the lowest possible network latency, but monitor CPU usage to ensure it doesn't introduce significant overhead.
+
+---
+
+### Client Behavior and UI
+
+#### Improve Inertial Scrolling
+Enhances the smoothness and feel of inertial scrolling (momentum-based scrolling) in UI elements.
+
+*   **Flag:** `FFlagUserBetterInertialScrolling`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagUserBetterInertialScrolling": "true"
+    }
+    ```
+*   **Purpose:** Improves the physics and feel of scrolling lists, inventories, or other scrollable frames, making the momentum effect more fluid and natural.
+*   **Default Value:** `false`.
+*   **Effects:** Results in a smoother scrolling experience, particularly noticeable on touchpads or touchscreens where flick-scrolling is common.
+
+#### Disable Chat Bubbles
+Prevents chat messages from appearing in bubbles above player characters' heads.
+
+*   **Flag:** `FFlagEnableBubbleChatFromChatService`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagEnableBubbleChatFromChatService": "False"
+    }
+    ```
+*   **Purpose:** Disables the rendering of chat messages as floating bubbles in the 3D world space.
+*   **Default Value:** `True` (Bubble chat enabled).
+*   **Effects:** Chat messages will only appear in the standard chat window, not above characters. This can reduce visual clutter, especially in crowded areas.
+
+#### Disable Chinese Policy Compliance Checks (Use with Extreme Caution)
+Attempts to bypass checks related to compliance with Chinese government regulations and policies.
+
+*   **Flags:**
+    *   `DFFlagPolicyServiceReportIsNotSubjectToChinaPolicies`
+    *   `DFFlagPolicyServiceReportDetailIsNotSubjectToChinaPolicies`
+    *   `DFIntPolicyServiceReportDetailIsNotSubjectToChinaPoliciesHundredthsPercentage`
+    *   `FStringDevPublishChinaRequirementsLink`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagPolicyServiceReportIsNotSubjectToChinaPolicies": "false",
+       "DFFlagPolicyServiceReportDetailIsNotSubjectToChinaPolicies": "false",
+       "DFIntPolicyServiceReportDetailIsNotSubjectToChinaPoliciesHundredthsPercentage": "0",
+       "FStringDevPublishChinaRequirementsLink": "YesIAmChinese" // Arbitrary string likely ignored when other flags are false
+    }
+    ```
+*   **Purpose:** These flags appear related to Roblox's internal systems for handling policy differences, specifically concerning China. Setting the boolean flags to `false` and the percentage to `0` likely aims to signal that the user *is* subject to these policies or bypasses checks determining applicability.
+*   **Default Value:** Varies based on region and other factors. Likely `True` for users outside China.
+*   **Effects:** The exact consequences are unclear and likely depend heavily on Roblox's backend systems and the user's actual location and account status. Attempting to manipulate these flags could potentially lead to account issues or unintended behavior.
+
+> [!CAUTION]
+> Manipulating flags related to regional policy compliance is highly discouraged. It may violate Roblox's Terms of Service and could have unforeseen consequences on account features or status. The intended effect of the provided example (setting flags to `false`) is ambiguous – it might either falsely signal compliance *or* attempt to disable the checks entirely. The provided GIF link (`nalog` - Russian for "tax") and reactions suggest this is likely intended humorously or for bypassing restrictions, but should be treated with extreme caution.
+
+#### Enable Party Voice Chat Features (Experimental)
+Disables filters that might prevent voice chat usage within the Roblox "Party" system.
+
+*   **Flags:**
+    *   `FFlagEnablePartyVoiceOnlyForUnfilteredThreads`
+    *   `FFlagEnablePartyVoiceOnlyForEligibleUsers`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagEnablePartyVoiceOnlyForUnfilteredThreads": "False",
+       "FFlagEnablePartyVoiceOnlyForEligibleUsers": "False"
+    }
+    ```
+*   **Purpose:** Overrides default restrictions that might limit voice chat in parties based on user eligibility or chat filter settings.
+*   **Default Value:** `True` (Restrictions enabled).
+*   **Effects:** May allow voice chat usage within parties even if users wouldn't normally meet eligibility criteria. Requires voice chat to be enabled account-wide. Uses the default system input device.
+
+> [!IMPORTANT]
+> All participants in the party **must** have these flags set to `False` to communicate successfully. It's noted that this might result in "uncensored" communication, likely meaning standard chat filters might not apply as strictly to the voice channel. Use responsibly.
+
+#### Enable Newer UI Theme (Blue/Dark)
+Enables the "Foundation Colors V7" theme, providing updated visuals, often with blue accents in the dark theme.
+
+*   **Flag:** `FFlagLuaAppEnableFoundationColors7`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagLuaAppEnableFoundationColors7": "True"
+    }
+    ```*   **Purpose:** Activates a specific iteration of Roblox's newer UI color palette system.
+*   **Default Value:** Variable (may be enabled by default for many users).
+*   **Effects:** Updates the appearance of the Roblox desktop application UI. (Duplicate entry, see Supplement 4 for original details).
+
+#### Remove Layered Clothing Visuals
+Effectively hides layered clothing items by manipulating the underlying "cage" deformation limits.
+
+*   **Flag:** `DFIntLCCageDeformLimit`
+*   **JSON Example:**
+    ```json
+    {
+       "DFIntLCCageDeformLimit": "-1"
+    }
+    ```
+*   **Purpose:** Controls the deformation limit for the invisible "cage mesh" that layered clothing wraps around. Setting it to `-1` (or likely any sufficiently low/invalid value) prevents the cage from forming correctly.
+*   **Default Value:** `15`.
+*   **Effects:** Layered clothing items (jackets, sweaters, etc.) will not render on avatars, as the underlying structure they rely on is disabled. Base clothing (shirts, pants) and accessories are unaffected. This is primarily a visual preference or potential minor performance tweak.
+
+---
+
+### Rendering and Performance
+
+#### Enable Lanczos Upsampling for Textures
+Activates Lanczos resampling for upscaling textures, aiming for higher quality results than simpler methods.
+
+*   **Flags:**
+    *   `DFFlagRenderLanczosUpsampling`
+    *   `DFFlagRenderLanczosSeparateAxis`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagRenderLanczosUpsampling": "true",
+       "DFFlagRenderLanczosSeparateAxis": "true"
+    }
+    ```
+*   **Purpose:** Uses the Lanczos algorithm when textures need to be upscaled (e.g., displaying a lower-resolution texture at a larger size). `DFFlagRenderLanczosSeparateAxis` likely enables applying the filter separately on horizontal and vertical axes.
+*   **Default Value:** `false`.
+*   **Effects:** Can produce sharper and more detailed visuals when upscaling textures compared to bilinear or nearest-neighbor filtering, potentially reducing blurriness at the cost of slightly higher computational effort during the upscaling process.
+
+> [!NOTE]
+> Lanczos resampling is known for producing sharper results but can sometimes introduce minor "ringing" artifacts near sharp edges. Its visual benefit is most noticeable when lower-resolution textures are viewed at higher resolutions.
+
+#### Enable CPU Light Culling (FSM)
+Forces the use of a specific CPU-based method for light culling (determining which lights affect which objects).
+
+*   **Flag:** `FFlagDebugForceFSMCPULightCulling`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugForceFSMCPULightCulling": "True"
+    }
+    ```
+*   **Purpose:** Explicitly enables a CPU-driven light culling technique, potentially based on Finite State Machines (FSM).
+*   **Default Value:** `False` (GPU culling or other methods are typically preferred).
+*   **Effects:** May alter performance characteristics of lighting calculations. CPU culling can be less efficient than GPU-based methods on modern hardware but might be used for debugging or as a fallback. (See Supplement 2 for potential interaction with `FFlagNewLightAttenuation`).
+
+#### Force Specific Graphics Quality Level (Render Distance "Fix")
+Overrides the Framerate Manager (FRM) quality level to lock graphics settings, allowing manual adjustment of the render distance slider independently.
+
+*   **Flag:** `DFIntDebugFRMQualityLevelOverride`
+*   **JSON Example (Lock to Level 1):**
+    ```json
+    {
+       "DFIntDebugFRMQualityLevelOverride": "1"
+    }
+    ```
+*   **Purpose:** Locks the *internal* graphics quality level (affecting textures, lighting details etc.) to the specified value (e.g., `1` for lowest). This prevents the *main* graphics slider in settings from changing these underlying details.
+*   **Default Value:** `-1` or `0` (No override).
+*   **Effects:** Allows the user to set the main graphics slider in the settings menu to maximum (Level 10) purely to maximize *render distance*, while the actual rendering quality (textures, effects) remains locked at the lower level specified by the FFlag (e.g., Level 1). This provides maximum view distance with potentially very low rendering detail for a performance boost.
+
+> [!TIP]
+> This is a technique to decouple render distance from overall graphics quality. Set `DFIntDebugFRMQualityLevelOverride` to the desired *quality* level (e.g., `1` for max FPS), then manually slide the in-game graphics setting to maximum (Level 10) to get the maximum *render distance*. (See Supplement 3 for more general info on this flag).
+
+#### Increase Asset Preloading Limits (Faster Loading)
+Sets limits for asset preloading to very high values, potentially speeding up game loading for previously visited experiences.
+
+*   **Flags:**
+    *   `DFIntAssetPreloading`
+    *   `DFIntNumAssetsMaxToPreload`
+    *   `FFlagEnableQuickGameLaunch` (Optional, related)
+*   **JSON Example:**
+    ```json
+    {
+       "DFIntAssetPreloading": "2147483647",
+       "DFIntNumAssetsMaxToPreload": "2147483647",
+       "FFlagEnableQuickGameLaunch": "True" // Optional
+    }
+    ```
+*   **Purpose:** Removes practical limits (`2147483647` is max 32-bit int) on the number of assets the client attempts to preload into memory before they are explicitly needed. `FFlagEnableQuickGameLaunch` enables related quick launch logic.
+*   **Default Values:** Lower limits (e.g., `100`) for counts, `False` for quick launch.
+*   **Effects:** Can decrease loading times when rejoining games or entering new areas *if* the necessary assets were already encountered and cached/preloaded during previous sessions or earlier in the current session. Requires assets to have been loaded once before.
+
+> [!CAUTION]
+> Setting preload limits extremely high can significantly increase initial load times (the first time assets are encountered) and RAM usage as the client tries to keep more assets readily available. Ensure you have sufficient RAM. `DFIntAssetPreloading` was reported as non-functional at one point but later reported as working again; its status might fluctuate.
+
+#### Enable Mesh Preloading
+Specifically enables the preloading mechanism for MeshParts.
+
+*   **Flag:** `DFFlagEnableMeshPreloading2`
+*   **JSON Example (Enable):**
+    ```json
+    {
+       "DFFlagEnableMeshPreloading2": "True"
+    }
+    ```
+*   **Purpose:** Activates the system responsible for preloading mesh assets.
+*   **Default Value:** `False` (according to the source text, though this might change via rollouts).
+*   **Effects:** Allows mesh assets to be loaded into memory proactively, potentially reducing stutter or pop-in when meshes first become visible. Works in conjunction with overall asset preloading limits.
+
+#### Adjust Number of Worker Threads
+Sets the number of worker threads used by the client's task scheduler for parallel processing.
+
+*   **Flag:** `DFIntRuntimeConcurrency`
+*   **JSON Example (Manual Setting):**
+    ```json
+    {
+       "DFIntRuntimeConcurrency": "11" // Example: For a CPU with 12 threads
+    }
+    ```
+*   **Purpose:** Controls how many background threads Roblox can use to parallelize tasks like physics, rendering preparation, etc.
+*   **Default Value:** `3` (Reported default on desktop).
+*   **Effects:** Increasing the thread count (up to CPU threads - 1 recommended) can significantly improve performance (FPS, loading times) in CPU-bound scenarios by allowing more tasks to run concurrently. Setting it too high (above physical/logical core count) offers no benefit and might add overhead. Setting it lower than default reduces parallelism and likely performance.
+
+> [!IMPORTANT]
+> The recommended value is **(Number of CPU Threads) - 1**. To find your CPU thread count, open Task Manager (Ctrl+Shift+Esc), go to the Performance tab, select CPU, and look for "Logical processors". Setting this correctly can be a major performance boost, especially on CPUs with many cores/threads. Monitor CPU temperatures, as increased parallelism can slightly increase load, though usually negligibly.
+
+---
+
+### Physics Simulation
+
+#### Enable Exploding Train Detection (Debug)
+Activates a debug feature within the physics simulation solver intended to detect "exploding trains" scenarios.
+
+*   **Flag:** `DFFlagDebugSimSolverDetectExplodingTrains2`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagDebugSimSolverDetectExplodingTrains2": "true"
+    }
+    ```
+*   **Purpose:** Likely a diagnostic tool for developers to identify physics instability issues where complex constrained systems (like trains) might "explode" due to simulation errors.
+*   **Default Value:** `false`.
+*   **Effects:** Unlikely to have any noticeable effect for regular players. May add slight overhead to the physics simulation for the detection logic.
+
+
+
+## Further Roblox FastFlags (FFlags) - Supplement 8
+
+This document details additional FFlags identified from recent discussions, continuing the series of supplements to the main FFlag overview.
+
+---
+
+### Audio
+
+#### Enable Direct Audio Occlusion
+Activates a specific method for calculating audio occlusion (how sounds are muffled or blocked by objects).
+
+*   **Flag:** `FFlagDebugEnableDirectAudioOcclusion2`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugEnableDirectAudioOcclusion2": "True"
+    }
+    ```
+*   **Purpose:** Enables an alternative or updated system ("Direct Audio Occlusion V2") for simulating how sounds are obstructed by geometry in the environment.
+*   **Default Value:** `False`.
+*   **Effects:** May change how sounds are perceived when objects are between the listener and the sound source, potentially providing more realistic muffling effects.
+
+---
+
+### UI and Client Behavior
+
+#### Custom Disconnect Message
+Allows setting a custom reason message displayed when the client disconnects, potentially bypassing the standard reconnect prompt.
+
+*   **Flags:**
+    *   `FFlagReconnectDisabled`
+    *   `FStringReconnectDisabledReason`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagReconnectDisabled": "True",
+       "FStringReconnectDisabledReason": "CUSTOM MESSAGE HERE"
+    }
+    ```
+*   **Purpose:**
+    *   `FFlagReconnectDisabled`: When `True`, disables the automatic reconnect attempt/prompt.
+    *   `FStringReconnectDisabledReason`: Sets the text displayed on the disconnect screen when reconnecting is disabled by the flag above.
+*   **Default Value:** `False` for `FFlagReconnectDisabled`, likely an empty or default reason string.
+*   **Effects:** Prevents the "Reconnect" button from appearing upon disconnection and shows the custom message provided in `FStringReconnectDisabledReason` instead. Replace `"CUSTOM MESSAGE HERE"` with your desired text. Setting `FFlagReconnectDisabled` to `False` re-enables the default reconnect behavior.
+
+#### Disable Chrome UI Components
+Disables the newer "Chrome" UI elements in the top bar (like the hamburger menu).
+
+*   **Flags:**
+    *   `FFlagEnableInGameMenuChrome`
+    *   `FFlagEnableInGameMenuChromeABTest4`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagEnableInGameMenuChrome": "False",
+       "FFlagEnableInGameMenuChromeABTest4": "False"
+    }
+    ```
+*   **Purpose:** Opts out of both the general Chrome UI feature and a specific A/B test related to it.
+*   **Default Value:** `True` (or depends on A/B test enrollment).
+*   **Effects:** Reverts the top-bar UI elements to an older style, removing the hamburger menu icon and potentially other associated changes. This provides a more specific way to target the Chrome UI compared to reverting the entire menu version.
+
+#### Disable "Automatic Translation" System Message
+Removes the system message that appears in chat upon joining some games, informing the user about automatic chat translation.
+
+*   **Flag:** `FFlagChatTranslationEnableSystemMessage`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagChatTranslationEnableSystemMessage": "False"
+    }
+    ```
+*   **Purpose:** Disables the display of the introductory message regarding chat translation features.
+*   **Default Value:** `True`.
+*   **Effects:** Prevents the "Roblox automatically translates supported languages in chat" message from appearing in the chat window at the start of a game session. Does not disable the translation feature itself.
+
+#### Use Old Microprofiler Font
+Reverts the font used in the Microprofiler overlay (Shift+F1-F5) to an older, potentially less readable version.
+
+*   **Flag:** `FFlagImproveMicroprofilerReadability`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagImproveMicroprofilerReadability": "False"
+    }
+    ```
+*   **Purpose:** Disables changes made to improve the readability of the Microprofiler font.
+*   **Default Value:** `True`.
+*   **Effects:** The text displayed in the Microprofiler panels will use the older font style. Purely a visual preference for debugging information.
+
+---
+
+### Asset Loading and Preloading
+
+#### Enable Avatar Asset Preloading
+Enables preloading of assets specifically related to player avatars.
+
+*   **Flags:**
+    *   `DFFlagEnablePreloadAvatarAssets`
+    *   `DFIntPreloadAvatarAssets`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagEnablePreloadAvatarAssets": "True",
+       "DFIntPreloadAvatarAssets": "2147483647" // Max 32-bit integer
+    }
+    ```
+*   **Purpose:**
+    *   `DFFlagEnablePreloadAvatarAssets`: Toggles the avatar preloading feature on/off.
+    *   `DFIntPreloadAvatarAssets`: Potentially controls the number or priority of avatar assets to preload. Setting to max integer aims to maximize this.
+*   **Default Value:** `False` for the enabling flag.
+*   **Effects:** May improve game loading times or reduce stutter when player avatars load into view by preloading their assets (accessories, body parts, clothing textures) beforehand.
+
+> [!IMPORTANT]
+> The maximum value for a standard 32-bit signed integer is `2147483647`. Using `2147483648` (as seen in one example) is technically out of bounds and may wrap around to a negative number or cause unexpected behavior. Use `2147483647` for the intended maximum effect. As with other aggressive preloading, monitor RAM usage.
+
+#### Reduce Character Load Time (Humanoid Load Time)
+Sets a target time limit (in milliseconds) for loading character appearance (Humanoid).
+
+*   **Flag:** `DFIntCharacterLoadTime`
+*   **JSON Example (Target 1ms):**
+    ```json
+    {
+       "DFIntCharacterLoadTime": "1"
+    }
+    ```
+*   **Purpose:** Specifies a desired maximum time allocation for the character loading process.
+*   **Default Value:** Unknown, likely a higher value.
+*   **Effects:** Setting a very low value (like `1`ms) might prioritize character loading or force it to complete faster, potentially at the cost of other loading tasks or visual fidelity if assets aren't ready.
+
+> [!CAUTION]
+> Setting this value extremely low might interfere with proper character appearance loading or cause instability. The user notes setting it to "infinite" breaks games. Experiment with small, reasonable values if desired.
+
+---
+
+### Performance and Optimization
+
+#### Optimize End-of-Frame Update Loop
+Enables optimizations related to the tasks performed at the very end of each frame's update cycle.
+
+*   **Flag:** `DFFlagFastEndUpdateLoop`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagFastEndUpdateLoop": "True"
+    }
+    ```
+*   **Purpose:** Aims to streamline the processing that occurs just before rendering the next frame.
+*   **Default Value:** `True`.
+*   **Effects:** Intended to potentially reduce frame times slightly or lower input latency. User reports are mixed ("doesn't optimize rather deoptimizes", "does reduce frame times").
+
+> [!NOTE]
+> This flag is reported as being enabled (`True`) by default in recent checks. Explicitly setting it may be redundant unless overriding an older `False` value. The actual performance impact seems debatable or situation-dependent.
+
+#### Enable Global Instancing for D3D11
+Enables a global instancing rendering technique specifically when using the DirectX 11 renderer.
+
+*   **Flags:** (Potentially alternative names exist)
+    *   `FFlagRenderEnableGlobalInstancingD3D11`
+    *   `FFlagRenderEnableGlobalInstancing7` (Possible alternative/older version)
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagRenderEnableGlobalInstancingD3D11": "true"
+       // OR "FFlagRenderEnableGlobalInstancing7": "true"
+    }
+    ```
+*   **Purpose:** Activates GPU instancing on a global scale for D3D11. Instancing allows drawing multiple copies of the same mesh with different properties (position, color) in a single draw call, significantly improving performance when rendering many identical objects.
+*   **Default Value:** `true`.
+*   **Effects:** Should generally improve rendering performance, especially in scenes with many repeated elements (trees, props, etc.), when using DirectX 11.
+
+> [!NOTE]
+> This feature is reported as being enabled (`true`) by default. Explicitly setting it is likely unnecessary.
+
+#### Set Mouse/Keyboard Latency Target Timer
+Adjusts internal timers possibly related to input processing latency targets for mouse and keyboard.
+
+*   **Flags:**
+    *   `FIntActivatedCountTimerMSKeyboard`
+    *   `FIntActivatedCountTimerMSMouse`
+*   **JSON Example (Set timers to 0ms):**
+    ```json
+    {
+       "FIntActivatedCountTimerMSKeyboard": "0",
+       "FIntActivatedCountTimerMSMouse": "0"
+    }
+    ```
+*   **Purpose:** Modifies timers (in milliseconds) associated with keyboard and mouse input activation counts. The exact function of these timers is unclear, but setting them to `0` might reduce delays or buffering related to input event processing.
+*   **Default Value:** Unknown positive integer(s).
+*   **Effects:** Potentially reduces input latency by minimizing delays associated with these internal timers. Effect might be subtle. Other related flags exist for Touch and Gamepad inputs (`FIntActivatedCountTimerMSTouch`, `FIntActivatedCountTimerMSGamepad`).
+
+---
+
+### Telemetry and Data Reporting
+
+#### Disable Device Info Reporting
+Disables the reporting of device information to Roblox servers.
+
+*   **Flags:**
+    *   `FIntReportDeviceInfoRollout` (Controls rollout percentage)
+    *   `DFIntReportDeviceInfoRate` (Controls report frequency)
+    *   `DFIntReportOutputDeviceInfoEventRateHundredthsPercentage`
+    *   `DFIntReportOutputDeviceInfoRateHundredthsPercentage`
+    *   `DFIntReportRecordingDeviceInfoEventRateHundredthsPercentage`
+    *   `DFIntReportRecordingDeviceInfoRateHundredthsPercentage`
+*   **JSON Example (Disable All):**
+    ```json
+    {
+       "FIntReportDeviceInfoRollout": "0",
+       "DFIntReportDeviceInfoRate": "0",
+       "DFIntReportOutputDeviceInfoEventRateHundredthsPercentage": "0",
+       "DFIntReportOutputDeviceInfoRateHundredthsPercentage": "0",
+       "DFIntReportRecordingDeviceInfoEventRateHundredthsPercentage": "0",
+       "DFIntReportRecordingDeviceInfoRateHundredthsPercentage": "0"
+    }
+    ```
+*   **Purpose:** Sets rollout percentages and reporting rates/frequencies for various device information telemetry events to zero, effectively disabling them.
+*   **Default Values:** `100` for rollout, non-zero rates.
+*   **Effects:** Prevents the client from sending detailed hardware and device configuration information (potentially including audio devices) to Roblox.
+
+#### Disable Memory Stats Reporting
+Disables various telemetry reports related to client memory usage.
+
+*   **Flags:**
+    *   `DFFlagReportClientMemoryCat`
+    *   `DFFlagReportMemoryAllocStats`
+    *   `DFFlagReportMemoryStatsToTelemetryV2`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagReportClientMemoryCat": "false",
+       "DFFlagReportMemoryAllocStats": "false",
+       "DFFlagReportMemoryStatsToTelemetryV2": "false"
+    }
+    ```
+*   **Purpose:** Disables specific telemetry flags related to reporting memory statistics, allocation patterns, and general memory categories.
+*   **Default Value:** `True`.
+*   **Effects:** Reduces the amount of memory-related diagnostic data sent to Roblox.
+
+#### Disable WebView Cookie Synchronization
+Prevents cookies from the embedded web view (used for some UI elements like avatar shop previews) from being synchronized or stored by the main Roblox engine.
+
+*   **Flags:**
+    *   `FFlagSyncWebViewCookieToEngine2`
+    *   `FFlagUpdateHTTPCookieStorageFromWKWebView` (Likely specific to macOS/iOS using WKWebView)
+*   **JSON Example (Disable Sync):**
+    ```json
+    {
+       "FFlagSyncWebViewCookieToEngine2": "false",
+       "FFlagUpdateHTTPCookieStorageFromWKWebView": "false"
+    }
+    ```
+*   **Purpose:** Disables mechanisms that share or update cookie data between the embedded web browser component and the main Roblox client's HTTP services.
+*   **Default Value:** `True`.
+*   **Effects:** May enhance privacy slightly by preventing web cookies set within WebView elements from persisting or being accessed outside that specific web context. Likely has minimal impact on functionality unless a feature specifically relies on this cookie sharing.
+
+#### Analytics and Telemetry Disablement (Comprehensive)
+
+This large collection of flags aims to disable a wide range of analytics, telemetry, and event reporting functionalities within the Roblox client. The general approach involves:
+
+1.  **Disabling Services:** Directly turning off analytics-related services (`DFFlagAnalyticsServiceEnabled: false`).
+2.  **Setting Rates/Percentages to Zero:** Configuring various integer flags (`DFInt*Percentage`, `DFInt*Rate`, etc.) to `0` to prevent sampling or reporting of data.
+3.  **Redirecting Endpoints:** Changing string flags (`DFString*URL`, etc.) that define reporting URLs to non-functional values like `"opt-out"` or `"balls"`, preventing data transmission to Roblox servers.
+4.  **Disabling Feature-Specific Analytics:** Setting numerous boolean flags (`DFFlag*`, `FFlag*`) related to specific features (UI elements, physics, networking, voice chat, etc.) to `false` to stop data collection for those features.
+
+*   **Flags:** (Extensive list targeting various analytics components)
+    *   `DFFlagAnalyticsServiceEnabled`
+    *   `DFFlagAnalyticsServiceCustomEventsEnabled`
+    *   `DFIntAnalytics*Percentage` / `DFInt*Rate` / `DFInt*Throttle*`
+    *   `DFStringAnalytics*URL` / `DFString*Endpoint`
+    *   `FFlag*Analytics*`
+    *   `FFlagEnable*Analytics*`
+    *   ... and many others as provided in the JSON.
+*   **JSON Example (Comprehensive Disable List):**
+    ```json
+    {
+        "DFFlagAnalyticsServiceCustomEventsEnabled": false,
+        "DFFlagAnalyticsServiceEnabled": false,
+        "DFFlagAnalyticsServiceEnabled_PlaceFilter": false,
+        "DFFlagAnalyticsServiceHydrationEnabled": false,
+        "DFFlagAnalyticsServiceRelaxedPlayerCheckEnabled": false,
+        "DFFlagAnalyticsServiceStudioEnabled_PlaceFilter": false,
+        "DFFlagAUMPAnalytics": false,
+        "DFFlagConvexDecompCompressionAnalytics": false,
+        "DFFlagLegacyRedundantPlayerCheckAnalytics": false,
+        "DFFlagLocalizationTableAnalyticsSenderRequeueFailedEntries": false,
+        "DFFlagLTAnalyticsIgnoreCoreGui": false,
+        "DFFlagNavigationAnalyticsAddPlaceId": false,
+        "DFFlagNewPackageAnalytics": false,
+        "DFFlagNonBlockingAnalyticsExit": false,
+        "DFFlagPath2DAnalytics_ProfilerScope": false,
+        "DFFlagPath2DAnalyticsEnabled2": false,
+        "DFFlagPlatformServiceCalledAnalytics": false,
+        "DFFlagProximityPromptAnalytics": false,
+        "DFFlagRealtimeClientAnalyticsPipelineConnectionsSendsSubscriptionStatus": false,
+        "DFFlagReportPath2DAnalyticsEnabled_Perf": false,
+        "DFFlagSimReportBroadPhasePairCountAnalytics": false,
+        "DFFlagTagAnalyticsPointsWithIxpIds": false,
+        "DFFlagUseJointAnalytics": false,
+        "DFFlagUwpPurchaseAnalytics": false,
+        "DFIntAnalyticsCDNProbeInfluxPermyriad": 0,
+        "DFIntAnalyticsForXBoxCrash_JoinInfluxHundredthsPercentage": 0,
+        "DFIntAnalyticsMaxSendWaitTimeMs": 0,
+        "DFIntAnalyticsMaxShutdownWaitTimeMs": 0,
+        "DFIntAnalyticsNS1CDNProbeChancePercent": 0,
+        "DFIntAnalyticsServiceFiredEventsBudgetMax": 0,
+        "DFIntAnalyticsServiceFiredEventsBudgetRefreshInSeconds": 0,
+        "DFIntCookieProtocolAnalyticsHundredthsPercentage": 0,
+        "DFIntCookieProtocolAnalyticsPriorityHundredthsPercentage": 0,
+        "DFIntCoreScriptsAnalyticsHundredthsPercentage": 0,
+        "DFIntDragDetectorDragAnalyticsThrottleHundredthsPercent": 0,
+        "DFIntEngineDatamodelAnalyticsInfoThrottle": 0,
+        "DFIntGuiClassUsageAnalytics_ReportHundredthsPercent": 0,
+        "DFIntGuiServiceChromeSignalAPIAnalytics_ReportHundredthsPercent": 0,
+        "DFIntInfluxReportingPackageAnalyticsHundrethsPercent": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToHttpMinHundrethsPercent": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToHttpMinHundrethsPercent_PlaceFilter": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToHttpOffset": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToHttpScale": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToServerSampleRateHundrethsPercent": 0,
+        "DFIntLocalizationTableAnalyticsSenderClientToServerSampleRateHundrethsPercent_PlaceFilter": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxBytesPerSecondClient": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxBytesPerSecondServer": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxClientQueueSize": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxEntriesPerRemoteEvent": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxPlayerIntegrityListSize": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxPlayerIntegrityListSize_PlaceFilter": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxServerQueueSize": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxToBeProcessedQueueSizeClient": 0,
+        "DFIntLocalizationTableAnalyticsSenderMaxToBeProcessedQueueSizeServer": 0,
+        "DFIntLocalizationTableAnalyticsSenderServerToHttpSampleRateHundrethsPercent": 0,
+        "DFIntLocalizationTableAnalyticsSenderServerToHttpSampleRateHundrethsPercent_PlaceFilter": 0,
+        "DFIntLocServicePerformanceAnalyticsHundredthsPercentage": 0,
+        "DFIntLTAnalyticsMaxEntrySizeBytes": 0,
+        "DFIntPercentApiRequestsRecordGoogleAnalytics": 0,
+        "DFIntPhysicsAnalyticsIntervalSec": 0,
+        "DFIntProximityPromptAnalyticsSampleRate": 0,
+        "DFIntReportAUMPAnalyticsPercentageHundredths": 0,
+        "DFIntScreenGuiSafeAreaPropertiesAnalyticsEventIngest_ReportHundredthsPercent": 0,
+        "DFIntScreenGuiTopbarSafeInsetsAnalyticsEventIngest_ReportHundredthsPercent": 0,
+        "DFIntStudioLexMapChangeDocAnalyticsThrottleHundredthsPercent2": 0,
+        "DFIntStudioSyntaxHighlightingOnChangeAnalyticsThrottleHundredthsPercent2": 0,
+        "DFIntTeleportV2InvocationsAnalyticsInfluxHundredthsPercentage": 0,
+        "DFIntTeleportV2InvocationsAnalyticsInfluxHundredthsPercentage_PlaceFilter": 0,
+        "DFIntUIDragDetectorDragAnalyticsThrottleHundredthsPercent": 0,
+        "DFLogAnalyticsDeferredEphemeralReportingDiagnostic": 0,
+        "DFLogAnalyticsService_PlaceFilter": 0,
+        "DFStringAnalyticsEventStreamUrlEndpoint": "opt-out",
+        "DFStringAnalyticsNS1BeaconConfig": "https://opt-out.roblox.com",
+        "DFStringLocalizationTableAnalyticsSenderImplementationAnalyticsSuffix": "opt-out",
+        "DFStringRobloxAnalyticsURL": "https://opt-out.roblox.com",
+        "FFlagAddAnalyticsForImprovedPathfinding4": false,
+        "FFlagAddAnalyticsForImprovedRasterization4": false,
+        "FFlagAddAnalyticsForImprovedSearchStatsPerRequest": false,
+        "FFlagAddFriendsMigrateAnalytics_v3": false,
+        "FFlagAddRomarkAnalyticsForPathfinding": false,
+        "FFlagAddSafeAreaAnalytics2": false,
+        "FFlagAlignToolImprovedAnalytics": false,
+        "FFlagAnalyticsGlobalVarRefactorV1": false,
+        "FFlagAnalyticsGlobalVarRefactorV10": false,
+        "FFlagAnalyticsGlobalVarRefactorV2": false,
+        "FFlagAnalyticsGlobalVarRefactorV3": false,
+        "FFlagAnalyticsGlobalVarRefactorV3b": false,
+        "FFlagAnalyticsGlobalVarRefactorV4": false,
+        "FFlagAnalyticsGlobalVarRefactorV5": false,
+        "FFlagAnalyticsGlobalVarRefactorV5b": false,
+        "FFlagAnalyticsGlobalVarRefactorV6": false,
+        "FFlagAnalyticsGlobalVarRefactorV7": false,
+        "FFlagAnalyticsGlobalVarRefactorV8": false,
+        "FFlagAnalyticsGlobalVarRefactorV9": false,
+        "FFlagAnalyticsGlobalVarRefactorV9b": false,
+        "FFlagAnalyticsServiceForClient_PlaceFilter": false,
+        "FFlagAppChatAnalyticsAppChatVisible": false,
+        "FFlagAppChatAnalyticsPlaySessionId": false,
+        "FFlagAvatarChatCameraTrackerStatusAnalytics": false,
+        "FFlagAvatarChatSubsessionAnalyticsV3": false,
+        "FFlagAvatarChatSubsessionAnalyticsV4": false,
+        "FFlagAXCarouselFixMissingAnalytics2": false,
+        "FFlagAXCatalogSearchLandingAnalyticsContext": false,
+        "FFlagAXColorPickerErrorAnalytics": false,
+        "FFlagAXDoNotSendAnalyticsNoItemType": false,
+        "FFlagAXEnableKeywordAnalyticsForSearch": false,
+        "FFlagAXSearchRefactorForAnalytics": false,
+        "FFlagAXSearchRefactorForAnalytics1": false,
+        "FFlagCapturesPerformanceAnalyticsEnabled": false,
+        "FFlagCevAnalytics": false,
+        "FFlagCEVLowMemoryWarningAnalytics": false,
+        "FFlagChatLineAbandonedReportAnalyticsFix": false,
+        "FFlagCleanupDUARAnalytics": false,
+        "FFlagCollectAnalyticsForSystemMenu": false,
+        "FFlagCoreGuiEnableAnalytics": false,
+        "FFlagCoreScriptPublishAssetAnalytics": false,
+        "FFlagDeepLinkEventReceiverAnalyticsEvent": false,
+        "FFlagEnableAnalyticsForCameraDevicePermissions": false,
+        "FFlagEnableAnimatorAnalyticsForRetargeting": false,
+        "FFlagEnableAppChatAnalyticsReportUserEvent": false,
+        "FFlagEnableChromeAnalytics": false,
+        "FFlagEnableChromePinAnalytics2": false,
+        "FFlagEnableConnectDisconnectAnalytics": false,
+        "FFlagEnableConnectDisconnectButtonAnalytics": false,
+        "FFlagEnableExpJoinMicPermAnalytics": false,
+        "FFlagEnableExplicitSettingsChangeAnalytics": false,
+        "FFlagEnableForceOTAAnalytics": false,
+        "FFlagEnableForkedChatAnalytics": false,
+        "FFlagEnableInExpJoinVoiceAnalytics2": false,
+        "FFlagEnableInExpLikelySpeakingAnalytics": false,
+        "FFlagEnableInExpMicPermissionsAnalytics": false,
+        "FFlagEnableInExpVoiceConsentAnalytics": false,
+        "FFlagEnableLeaveGroupDialogAnalytics": false,
+        "FFlagEnableLuaVoiceChatAnalyticsV2": false,
+        "FFlagEnableNudgeAnalyticsV2": false,
+        "FFlagEnableSendCameraAccessAnalytics": false,
+        "FFlagEnableTopBarAnalytics": false,
+        "FFlagEnableTwoStepCatalogAnalytics": false,
+        "FFlagEnableUGCIndividualAssetUploadAnalytics": false,
+        "FFlagEnableUGCUploadFlowAnalytics4": false,
+        "FFlagEnableVoiceMuteAnalytics": false,
+        "FFlagExtendedWidgetAnalytics2": false,
+        "FFlagExtendWidgetAnalyticsWithWidgetItemIds": false,
+        "FFlagFixChatListCountAnalytics": false,
+        "FFlagFixContactRecsCTRAnalytics": false,
+        "FFlagFixMissingPermissionsAnalytics": false,
+        "FFlagFixResumeSourceAnalytics": false,
+        "FFlagFriendsCarouselFixUnverseIdAnalytics": false,
+        "FFlagGameInviteModalAnalyticsEmptyEventContextFix": false,
+        "FFlagGamepadAnalytics": false,
+        "FFlagIGMv1ARFlowExpandedAnalyticsEnabled": false,
+        "FFlagInExperienceSettingsRefactorAnalytics": false,
+        "FFlagInGameChromeSignalAPIAnalytics": false,
+        "FFlagLightgridDependencyExperimentAnalytics": false,
+        "FFlagLocServicePerformanceAnalyticsEnabled": false,
+        "FFlagLooksAnalyticsEmptyItemsFixes": false,
+        "FFlagLooksAnalyticsFixes": false,
+        "FFlagLuaAppAbuseReportAnalyticsHasLaunchData": false,
+        "FFlagLuaAppFixGameGridAnalyticsUniverseId": false,
+        "FFlagLuaAppGameSetTargetIdAnalytics": false,
+        "FFlagLuaAppNavigationAnalytics": false,
+        "FFlagLuaAppSlpAnalyticsFixes": false,
+        "FFlagLuaVoiceChatAnalyticsUseCounterV2": false,
+        "FFlagLuaVoiceChatAnalyticsUseEventsV2": false,
+        "FFlagMaterialGeneratorCollectAnalytics": false,
+        "FFlagMeshLoDAnalyticsFixIsLocalAsset": false,
+        "FFlagNavigationAnalyticsImprovement": false,
+        "FFlagNewPackageAnalyticsWithRefactor2": false,
+        "FFlagOffNetworkAnalytics": false,
+        "FFlagPathfindingHighComputeImplTimeAnalytics2": false,
+        "FFlagPCSCEVFeasibieAnalytics": false,
+        "FFlagRbxAnalyticsExposePlaySessionId": false,
+        "FFlagRemoveCLBAnalytics": false,
+        "FFlagReportAbuseMenuEntrypointAnalytics": false,
+        "FFlagSearchSourceEventAnalytics_1": false,
+        "FFlagSendDevicePermissionsModalAnalytics": false,
+        "FFlagSendGeometryPhysicsAnalyticsBeforeDMClosing": false,
+        "FFlagShareGameSearchBoxFocusAnalytics": false,
+        "FFlagShareLinkPrivateServerAnalyticsEnabled": false,
+        "FFlagSimEnableEditableAnalytics": false,
+        "FFlagSocialAnalyticsFixUpdateInfoAllEvents": false,
+        "FFlagSocialAnalyticsSupportTelemetry": false,
+        "FFlagSocialAnalyticsTelemetryModule": false,
+        "FFlagSocialAnalyticsTelemetrySupportDynamicName": false,
+        "FFlagSocialExperienceJoinCustomAnalyticsArgs": false,
+        "FFlagSocialLuaAnalyticsAddPlatformValue": false,
+        "FFlagSocialLuaAnalyticsAddPlatformValueFix": false,
+        "FFlagSocialLuaAnalyticsAddTimestamp": false,
+        "FFlagSocialLuaAnalyticsRemoveSocialLibraries": false,
+        "FFlagSongbirdChromeWindowAnalytics": false,
+        "FFlagSongbirdSendAnalytics": false,
+        "FFlagSongbirdWindowAnalyticsUseNonpii": false,
+        "FFlagStudioOnboardingExperiment1AdditionalAnalytics": false,
+        "FFlagStudioOnboardingStartPageCTAAnalytics": false,
+        "FFlagStudioReportChangeAnalytics": false,
+        "FFlagThumbnailLoadingAnalyticsMetrics": false,
+        "FFlagToastNotificationAnalyticsPlaySessionId": false,
+        "FFlagToolboxLinkifyAnalytics": false,
+        "FFlagToolboxListviewAnalytics": false,
+        "FFlagUGCValidationAnalytics": false,
+        "FFlagUpdateContactImporterToUseAnalyticsService": false,
+        "FFlagUserDidSignUpAnalyticsFix": false,
+        "FFlagUserSearchMoveAnalyticsV2_2": false,
+        "FFlagUserSearchTopTabAnalytics": false,
+        "FFlagVideoAnalyticsAvoidTempStringConstruction": false,
+        "FFlagVideoAnalyticsUseWeakThis": false,
+        "FFlagVoiceUpsellNewAnalytics": false,
+        "FFlagVoiceUserAgencyAddMuteDecisionAnalytics": false,
+        "FFlagVoiceUserAgencyAddMuteDecisionAnalytics_PlaceFilter": false,
+        "FFlagXboxAnalyticsTrackTTI2": false,
+        "FFlagXboxGamepadUserInfoAnalytics": false,
+        "FInt9SliceEditorAnalyticsReportingHundrethsPercent": 0,
+        "FIntGraphicsMetalAnalyticsHundredthPercent": 0,
+        "FIntGraphicsVulkanAnalyticsHundredthPercent": 0,
+        "FIntHSRVersionAnalyticsHundredthPercent": 0,
+        "FIntLocalizationAnalyticsSamplesPerMillion": 0,
+        "FIntMaterialPickerAnalyticsThrottleHundrethsPercent": 0,
+        "FIntPercentReportingLeaveGameAnalytics": 0,
+        "FIntPluginLoadingAnalyticsHundredthsPercentage": 0,
+        "FIntPluginOTAAnalyticsHundredthsPercentage": 0,
+        "FIntPluginOTADeploymentAnalyticsHundredthsPercentage": 0,
+        "FIntPluginOTAErrorAnalyticsHundredthsPercentage": 0,
+        "FIntProfilePlatformAnalyticsThrottlingThousandths": 0,
+        "FIntRenderShaderLoadAnalyticsHundredthPercent": 0,
+        "FIntStudioLexMapChangeDocAnalyticsPerKeystrokeThrottleHundredthsPercent": 0,
+        "FIntStudioPackagesPublishAnalyticsNumOfTopClassName": 0,
+        "FIntStudioSyntaxHighlightingOnChangeAnalyticsPerKeystrokeHundredthsPercent": 0,
+        "FIntTeleportMethodAnalyticsHundredthPct": 0,
+        "FIntVRAvatarGesturesAnalyticsThrottleHundrethsPercent": 0,
+        "DFIntPhysicsAnalyticsHighFrequencyIntervalSec ": 0
+    }
+    ```
+*   **Purpose:** To comprehensively disable numerous known analytics and telemetry data collection points within the Roblox client.
+*   **Default Values:** Typically `true`, non-zero integers, or valid URLs for the respective flags.
+*   **Effects:** Significantly reduces the amount of diagnostic, usage, performance, and event data sent to Roblox servers.
+
+> [!IMPORTANT]
+> This is an extensive list targeting a wide array of analytics features. While it aims for broad coverage, it's possible some data collection might still occur through other mechanisms or future flags.
+
+> [!CAUTION]
+> Disabling analytics might hinder Roblox's ability to diagnose crashes, performance problems, or bugs effectively. Furthermore, flag names and behaviors can change with Roblox updates, potentially rendering parts of this configuration ineffective over time.
+
+---
+
+### Studio Specific
+
+#### Enable Studio Flag State Debugging
+Enables a debug feature related to flag states specifically within Roblox Studio.
+
+*   **Flag:** `FFlagDebugStudioFlagState`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugStudioFlagState": "True"
+    }
+    ```
+*   **Purpose:** Activates debugging functionality related to how FastFlags are handled or displayed within the Roblox Studio environment.
+*   **Default Value:** `False`.
+*   **Effects:** Only affects Roblox Studio. Requires a tool like RSMM (Roblox Studio Mod Manager) to modify Studio flags. The exact functionality enabled is unclear without using it in Studio.
+
+> [!IMPORTANT]
+> This flag is **only for Roblox Studio** and requires separate tools (like RSMM) to apply. It has no effect on the regular Roblox player client.
+
+### UI and Client Behavior
+
+#### Bring Back Older Chrome Menu Variations (Using DMP)
+Forces the client to load older versions of the UI ("Chrome Menu") by using DataModelPatches (DMP) specific to past Roblox versions, combined with a FastFlag to enable local DMP loading.
+
+*   **Required Flag:**
+    ```json
+    {
+       "FFlagDataModelPatcherForceLocal": "True"
+    }
+    ```
+*   **DataModelPatches (DMP):** Requires downloading and placing specific DMP files (linked in the original source for versions like V615, V611, V610, V608) into the appropriate client directory. These patches contain older UI definitions.
+*   **Associated Optional Flags:**
+    *   Unpin Chat: `{"FFlagEnableChromePinnedChat": false}`
+    *   Hide Playerlist Close Button: `{"FFlagDisablePlayerListDisplayCloseBtn": true}`
+    *   Remove Respawn from Unibar: `{"FFlagUnibarRespawn": false}` (Note: Breaks Unibar scrolling)
+*   **Purpose:** To load older UI layouts by forcing the client to use patched data models instead of the current live ones.
+*   **Effects:** Reverts the appearance of the top bar and potentially other core UI elements to match older versions.
+
+> [!CAUTION]
+> *   This method is complex, requiring manual download and placement of external patch files (DMPs). Use files only from trusted sources.
+> *   Using outdated DMPs **will break features** that rely on newer UI elements (e.g., Voice Chat UI, newer settings options). The source explicitly mentions VC and Chat Tab are broken.
+> *   DMPs are version-specific and will likely stop working or cause crashes after significant Roblox updates. This is an advanced modification primarily for exploring older UI states.
+
+#### Disable Chat System Completely
+Disables the in-game chat system entirely.
+
+*   **Flag:** `FFlagDebugForceChatDisabled`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugForceChatDisabled": "True"
+    }
+    ```
+*   **Purpose:** Acts as a master switch to turn off the chat feature.
+*   **Default Value:** `False`.
+*   **Effects:** Completely disables the chat window and prevents messages from being sent or received. Can provide a minor performance increase in servers with very high chat volume by eliminating chat processing overhead.
+
+#### Disable Non-Chrome UI Rendering (White Screen/Hide GUI)
+Disables the rendering of major UI components, potentially leading to a white screen or missing interface elements.
+
+*   **Flags:**
+    *   `FFlagDebugDontRenderUI`
+    *   `FFlagDebugDontRenderScreenGui`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugDontRenderUI": "True" // Disables broader UI rendering
+    }
+    ```
+    ```json
+    {
+       "FFlagDebugDontRenderScreenGui": "True" // Specifically targets ScreenGuis
+    }
+    ```
+*   **Purpose:** Debug flags to selectively disable rendering of UI layers.
+*   **Default Value:** `False`.
+*   **Effects:** Can hide most or all game and core UI elements. `FFlagDebugDontRenderUI` is likely broader than `FFlagDebugDontRenderScreenGui`. Can result in an unplayable state or a white screen.
+
+> [!WARNING]
+> These are debug flags that will likely make the game unusable by hiding critical interface elements. Users report setting them to `True` can sometimes prevent Roblox from working correctly. Use `False` to revert.
+
+#### Rename "Charts" Tab to "Discovery" (App UI)
+Renames the "Charts" navigation tab in the main Roblox app/website UI to "Discovery".
+
+*   **Flags:**
+    *   `FFlagLuaAppChartsPageRename`
+    *   `FFlagEnableNavBarLabels3`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagLuaAppChartsPageRename": "false",
+       "FFlagEnableNavBarLabels3": "false"
+    }
+    ```
+*   **Purpose:** These flags likely control experiments related to renaming or redesigning the navigation bar. Setting them to `false` might revert to or force an older state where "Discovery" was used instead of "Charts".
+*   **Default Value:** `True` (using "Charts" and current labels).
+*   **Effects:** Changes the text label of one of the main navigation tabs in the Roblox app/website interface. Purely cosmetic.
+
+---
+
+### Performance and Optimization
+
+#### Disable Data Size Limit for Replicator
+Removes the default size limit for data packets handled by the network replicator.
+
+*   **Flag:** `DFFlagReplicatorDisKickSize`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagReplicatorDisKickSize": "True"
+    }
+    ```
+*   **Purpose:** The replicator normally enforces a maximum size for data chunks being sent over the network to prevent excessively large packets. Setting this to `True` disables this size limit check.
+*   **Default Value:** `false`.
+*   **Effects:** Allows the client/server to send larger data packets without hitting the default limit.
+
+> [!WARNING]
+> Disabling the size limit (`True`) can lead to significantly higher bandwidth usage and potentially network instability or disconnects if extremely large packets are generated and overwhelm the connection or intermediate network hardware. Use with caution.
+
+#### Enable GPU Light Culling
+Enables a specific GPU-based light culling technique.
+
+*   **Flag:** `FFlagFastGPULightCulling3`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagFastGPULightCulling3": "True"
+    }
+    ```
+*   **Purpose:** Activates an optimized method for the GPU to determine which lights affect which parts of the scene, reducing the number of light calculations needed.
+*   **Default Value:** `false`.
+*   **Effects:** Can improve rendering performance, especially in scenes with many light sources, by offloading the culling process to the GPU more effectively.
+
+#### Force Hidden Surface Removal (HSR) Generation
+Forces the generation and use of Hidden Surface Removal (HSR) data.
+
+*   **Flag:** `FFlagDebugForceGenerateHSR`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagDebugForceGenerateHSR": "true"
+    }
+    ```
+*   **Purpose:** HSR is an optimization technique that pre-calculates which surfaces are hidden by others, allowing the renderer to skip drawing them. This flag forces the HSR data generation process.
+*   **Default Value:** `false` (HSR might be generated automatically based on heuristics or quality settings).
+*   **Effects:** Ensures HSR is active, potentially improving rendering performance by reducing the amount of geometry processed, especially in complex scenes with lots of overlapping objects.
+
+> [!NOTE]
+> HSR differs from Occlusion Culling. HSR primarily deals with *surfaces* hidden behind other surfaces (like the back faces of an object or parts hidden within a model), often handled during rasterization (e.g., Z-buffering). Occlusion Culling typically works at the *object* level, culling entire objects hidden behind other objects (occluders) earlier in the pipeline. Both aim to reduce rendering workload.
+
+#### Force MSAA (Multisample Anti-Aliasing)
+Forces the use of Multisample Anti-Aliasing (MSAA) at a specific sample level.
+
+*   **Flag:** `FIntDebugForceMSAASamples`
+*   **JSON Example (Force 4x MSAA):**
+    ```json
+    {
+       "FIntDebugForceMSAASamples": "4"
+    }
+    ```
+*   **Purpose:** Overrides the game's or user's anti-aliasing setting to enforce a specific MSAA sample count (valid values typically 0, 1, 2, 4, 8).
+*   **Default Value:** `0` or `1` (effectively no MSAA or minimal).
+*   **Effects:** Improves edge smoothness and reduces "jaggies" at the cost of performance. Higher sample counts (e.g., 4x, 8x) provide better quality but have a greater performance impact.
+
+> [!IMPORTANT]
+> *   Valid sample values are powers of 2 (0, 1, 2, 4, 8).
+> *   Values above `4` (i.e., `8`) are reported to cause **visual bugs** with decals or other viewport elements.
+> *   Setting a value higher than `8` (e.g., `2048`) will still cap the actual MSAA level at `8x` internally.
+> *   **`4` is generally considered the maximum stable value.** The visual difference between 4x and 8x is often minimal, while the performance cost of 8x is significantly higher and may introduce bugs.
+
+#### Induce Lag/Stutter via Garbage Collection Settings
+Intentionally causes stuttering, particularly when jumping, by setting Lua garbage collection parameters to extreme values.
+
+*   **Flags:**
+    *   `DFIntLuaGcMaxKb` (Max memory before forced GC cycle)
+    *   `DFIntLuauGcStepSizeKb` (Amount of work per GC step)
+*   **JSON Example (Induce Stutter):**
+    ```json
+    {
+       "DFIntLuaGcMaxKb": "2147483647",
+       "DFIntLuauGcStepSizeKb": "2147483647"
+    }
+    ```
+*   **Purpose:** Setting these to maximum integer values likely disrupts the normal incremental garbage collection process, causing infrequent but massive GC pauses when the memory limit is hit, leading to noticeable freezes or stutters.
+*   **Default Values:** Moderate values tuned for balanced performance.
+*   **Effects:** Creates intentional performance drops and stuttering.
+
+> [!WARNING]
+> This is a "troll flag" configuration designed to deliberately worsen performance and induce lag spikes. It serves no practical optimization purpose. Use `0` or default values for normal operation.
+
+---
+
+### Networking
+
+#### Limit Data Sender Bandwidth (Ping Increase/Fix)
+Sets a very low maximum bandwidth limit for the client's data sender, potentially increasing perceived ping or fixing specific network issues related to excessive bandwidth usage.
+
+*   **Flag:** `DFIntDataSenderMaxBandwidthBps`
+*   **JSON Example (Very Low Limit):**
+    ```json
+    {
+       "DFIntDataSenderMaxBandwidthBps": "150"
+    }
+    ```
+*   **Purpose:** Limits the maximum bytes per second the client's general data sender attempts to use.
+*   **Default Value:** Likely a much higher value (e.g., related to `DFIntPhysicsSenderMaxBandwidthBps` default of 38760 or higher).
+*   **Effects:** Severely restricts outgoing data rate. This will likely increase latency and cause lag ("increase your ping") due to data queuing up.
+
+> [!NOTE]
+> While presented as potentially increasing ping for trolling, the user also notes it might be used "for a fix people have". This could imply it's a workaround for rare scenarios where the client might incorrectly attempt to send too much data, causing issues on very limited connections. However, for most users, this will significantly degrade network performance.
+
+#### Disable Timeout Disconnect Message
+Prevents the standard disconnect message/screen from appearing when a network timeout occurs.
+
+*   **Flag:** `DFFlagDebugDisableTimeoutDisconnect`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagDebugDisableTimeoutDisconnect": "True"
+    }
+    ```
+*   **Purpose:** Disables the client's action upon detecting a network timeout.
+*   **Default Value:** `False`.
+*   **Effects:** The client might simply freeze or hang indefinitely upon losing connection instead of showing the usual "You have been disconnected" message.
+
+> [!NOTE]
+> Considered "kinda useless" as it doesn't prevent the disconnect itself, only the notification. It might mask connection issues rather than solving them. Possibly used alongside other flags (`DFIntDefaultTimeoutTimeMs`) to experiment with connection handling.
+
+#### Fix RakNet Bandwidth Collapse Issue
+Enables a fix within the RakNet networking library related to potential bandwidth estimation collapse.
+
+*   **Flag:** `DFFlagRakNetFixBwCollapse`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagRakNetFixBwCollapse": "true"
+    }
+    ```
+*   **Purpose:** Addresses a specific issue where RakNet's bandwidth detection/congestion control mechanism might incorrectly reduce the available bandwidth estimate ("collapse").
+*   **Default Value:** `false`.
+*   **Effects:** May improve network stability and performance, especially on connections prone to fluctuations, by preventing the bandwidth from being unnecessarily throttled due to this specific collapse issue.
+
+---
+
+### Telemetry and Logging
+
+#### Remove DM (Direct Message?) Logging
+Disables logging related to "DM"s (potentially Direct Messages or Data Model interactions).
+
+*   **Flag:** `FFlagAddDMLogging`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagAddDMLogging": "false"
+    }
+    ```
+*   **Purpose:** Turns off a specific logging mechanism labeled "DM". The exact scope (chat DMs, internal DataModel logs) is unclear but implied to be related to privacy.
+*   **Default Value:** `True`.
+*   **Effects:** Reduces logging, potentially enhancing privacy by not recording certain interactions.
+
+> [!NOTE]
+> This likely does *not* affect moderation or banning systems, which operate based on server-side data and reports, not client-side logs that this flag might disable.
+
+---
+
+### Audio and Sound
+
+#### Use Velocity for Sound Effects (Doppler)
+Enables sound properties to be affected by the physical velocity of the sound source and listener, simulating effects like Doppler shift.
+
+*   **Flags:**
+    *   `FFlagSoundsUsePhysicalVelocity`
+    *   `FFlagUserSoundsUseRelativeVelocity2`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagSoundsUsePhysicalVelocity": "True",
+       "FFlagUserSoundsUseRelativeVelocity2": "True"
+    }
+    ```
+*   **Purpose:**
+    *   `FFlagSoundsUsePhysicalVelocity`: Makes sound emitters consider their physical velocity.
+    *   `FFlagUserSoundsUseRelativeVelocity2`: Enables Doppler effect calculations based on the relative velocity between the sound source and the listener.
+*   **Default Value:** `False` for both.
+*   **Effects:** Adds realism to sounds by making their pitch shift based on movement (Doppler effect - e.g., a siren changing pitch as it passes). Can potentially sound glitchy if velocities are extreme or erratic. `FFlagUserSoundsUseRelativeVelocity2` is noted as potentially improving the stability when `FFlagSoundsUsePhysicalVelocity` is enabled.
+
+---
+
+### Character Appearance
+
+#### Fix Temporary Hair Order Property
+Enables a temporary fix related to the rendering order or properties of hair accessories.
+
+*   **Flag:** `DFFlagTEMPFixHairOrderProperty`
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagTEMPFixHairOrderProperty": "true"
+    }
+    ```
+*   **Purpose:** Applies a specific, likely temporary, fix to address issues with how hair accessories are layered or rendered.
+*   **Default Value:** `false`.
+*   **Effects:** May resolve visual glitches or incorrect layering involving multiple hair accessories.
+
+### Graphics and Rendering (Vulkan Specific)
+
+#### Vulkan Rendering Optimizations and Fixes
+This collection of flags targets various aspects of the experimental Vulkan renderer, aiming to apply fixes, adjust behavior, and manage resources.
+
+*   **Flags:** (Includes numerous Vulkan-specific flags)
+    *   `FFlagGraphicsVulkanSampleCountFix`
+    *   `FFlagGraphicsVulkanSwapchainImagesFix`
+    *   `FFlagGraphicsVulkanSwapchainCount`
+    *   `FFlagGraphicsVulkanBufferWaw`
+    *   `FStringGraphicsVulkanVertexOutputsBufferLimitMiB`
+    *   `FFlagGraphicsVulkanYuvTexturesSamplers5`
+    *   `FFlagGraphicsVulkanFixInputBindingGaps2`
+    *   `FFlagGraphicsVulkanDescriptorSetBindFix`
+    *   `FFlagGraphicsVulkanDescriptorSetBindCSFix`
+    *   `FFlagGraphicsVulkanClampSurfaceSize`
+    *   `FFlagGraphicsVulkanBufferUploadBarrier`
+    *   `DFFlagRecategorizeVulkanDeviceLostCrashes`
+    *   `FStringGraphicsVulkanVaryingBufferLimitMiB`
+    *   `FFlagGraphicsVulkanDeviceLostCrash`
+    *   `FFlagUseConstantBufferViewsVulkan2`
+    *   `FFlagVulkanAlwaysLogLayersAndExtensions` (Logging)
+    *   `FIntGraphicsVulkanAnalyticsHundredthPercent` (Analytics)
+    *   `FFlagSetDbgInfoVulkan` (Debug Info)
+    *   `FStringGraphicsVulkanBlacklist*` (Device Blacklisting)
+    *   `FIntEnableFIB3VulkanHundredthPercent` (Future Is Bright Rollout for Vulkan)
+    *   `FIntGraphicsVulkanMinDriverVersionPVR` (Driver Version Check)
+    *   `FStringVulkanBuggyRenderpassList` (Buggy Render Pass List)
+    *   `FFlagHandleAltEnterFullscreenManually` (Fullscreen Handling)
+*   **JSON Example (Combined):**
+    ```json
+    {
+        "FFlagGraphicsVulkanSampleCountFix": "True",
+        "FFlagVulkanAlwaysLogLayersAndExtensions": "False",
+        "FIntGraphicsVulkanAnalyticsHundredthPercent": "0",
+        "FFlagSetDbgInfoVulkan": "False",
+        "FFlagGraphicsVulkanSwapchainImagesFix": "True",
+        "FFlagGraphicsVulkanSwapchainCount": "True",
+        "FFlagGraphicsVulkanBufferWaw": "False",
+        "FStringGraphicsVulkanVertexOutputsBufferLimitMiB": "0x13B6:.\\u002B:.\\u002B=256",
+        "FFlagGraphicsVulkanBlacklistIDs2": "False",
+        "FStringGraphicsVulkanBlacklistVendorIDs": "",
+        "FFlagGraphicsVulkanBlacklistIDs": "False",
+        "FFlagGraphicsVulkanYuvTexturesSamplers5": "True",
+        "FFlagGraphicsVulkanImageViewName": "False",
+        "FFlagGraphicsVulkanFixInputBindingGaps2": "True",
+        "FFlagGraphicsVulkanDescriptorSetBindFix": "True",
+        "FFlagGraphicsVulkanDescriptorSetBindCSFix": "True",
+        "FFlagGraphicsVulkanClampSurfaceSize": "False",
+        "FFlagGraphicsVulkanBufferUploadBarrier": "True",
+        "DFFlagRecategorizeVulkanDeviceLostCrashes": "True",
+        "FStringGraphicsVulkanBlacklistVendorDeviceDriverIDs": "",
+        "FStringGraphicsVulkanBlacklistDeviceIDs": "",
+        "FIntEnableFIB3VulkanHundredthPercent": "16003",
+        "FFlagGraphicsVulkanDeviceLostCrash": "True",
+        "FFlagUseConstantBufferViewsVulkan2": "True",
+        "FStringGraphicsVulkanBlacklist": "",
+        "FStringGraphicsVulkanFutureGPUNameBlacklist": "",
+        "FStringGraphicsVulkanVaryingBufferLimitMiB": "0x13B6:.\\u002B:.\\u002B=256;0x5143:.\\u002B:.\\u002B=256",
+        "FStringVulkanBuggyRenderpassList": "",
+        "FIntGraphicsVulkanMinDriverVersionPVR": "0",
+        "FFlagHandleAltEnterFullscreenManually": "False"
+    }
+    ```
+*   **Purpose:** This extensive set of flags fine-tunes the Vulkan renderer, addressing potential bugs (swapchain issues, binding gaps, device loss), managing resources (buffer limits, blacklisting problematic GPUs/drivers), controlling features (YUV textures, constant buffer views), and configuring logging/analytics specific to Vulkan.
+*   **Default Values:** Vary widely; many fixes/features might be `False` by default. Blacklists are typically empty.
+*   **Effects:** Aims to improve stability, performance, and visual correctness when using the Vulkan rendering API. Disables unnecessary logging and analytics. Configures buffer limits and specific feature rollouts (like Future is Bright).
+
+> [!IMPORTANT]
+> This configuration is specifically for users forcing the Vulkan renderer (`FFlagDebugGraphicsPreferVulkan: "True"`). Vulkan itself is experimental on Roblox and may cause instability regardless of these flags. The `FLogNetwork: "7"` flag seems unrelated to Vulkan and might be an error in the original list. The blacklist strings are empty, meaning no devices are blacklisted by this configuration.
+
+---
+
+### Networking
+
+#### Disable CDN Usage for UWP Client Updates
+Prevents the UWP (Microsoft Store) version of Roblox from using Content Delivery Networks (CDNs) when checking for or downloading updates.
+
+*   **Flag:** `FFlagUWPUpgradeUseCDN`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagUWPUpgradeUseCDN": "false"
+    }
+    ```
+*   **Purpose:** Forces the UWP client to fetch update data directly from Roblox servers instead of potentially faster, geographically distributed CDN nodes.
+*   **Default Value:** `true`.
+*   **Effects:** Specific to the UWP client. Disabling CDN usage (`false`) will likely result in **slower update checks and downloads**.
+
+> [!CAUTION]
+> Disabling CDN usage is **not recommended** as it typically slows down downloads. This might only be useful for troubleshooting very specific network issues where CDN access is problematic.
+
+---
+
+### Graphics and Rendering
+
+#### Enable Dynamic Resolution Scaling
+Enables a feature where the game's rendering resolution is dynamically adjusted (usually lowered) to maintain a target framerate.
+
+*   **Flag:** `FFlagRenderDynamicResolutionScale12`
+*   **JSON Example (Disable):**
+    ```json
+    {
+       "FFlagRenderDynamicResolutionScale12": "false"
+    }
+    ```
+*   **Purpose:** Allows the engine to render the game at a lower resolution during heavy scenes and upscale it to the native display resolution, aiming to keep performance stable.
+*   **Default Value:** `true`.
+*   **Effects:** When enabled (`true`, default), helps maintain smoother FPS on lower-end hardware by sacrificing resolution temporarily. Disabling (`false`) forces rendering at the native selected resolution, which might provide a consistently sharper image but can lead to lower FPS in demanding situations.
+
+> [!NOTE]
+> This feature is reported as **enabled by default** (`true`) in recent Roblox versions. Setting it to `false` explicitly disables dynamic resolution.
+
+---
+
+### Physics and Simulation
+
+#### Configure "Exploding Train" Detection (Place Filter)
+Configures the rollout percentage for the "exploding train" physics detection feature, but only for specific Place IDs (games).
+
+*   **Flag:** `DFIntSimExplodingTrainHundredthsPercentage_PlaceFilter`
+*   **JSON Example:**
+    ```json
+    {
+       "DFIntSimExplodingTrainHundredthsPercentage_PlaceFilter": "10000;18973473972;6214255393;7027922660;9133022367;5177561496;6927810595;10082031223;4119848102;6458393580;6510504476;13295432657"
+    }
+    ```
+*   **Purpose:** Sets the rollout percentage (first value, `10000` = 100%) for the "exploding train" detection feature, but *only* activates it within the listed Place IDs (which are noted as being train-related games).
+*   **Default Value:** Likely empty or `0`.
+*   **Effects:** Enables the physics stability detection specifically in the listed games. This is likely used by Roblox developers to target testing or fixes for physics issues known to occur in those experiences.
+
+> [!NOTE]
+> This complements `DFFlagDebugSimSolverDetectExplodingTrains2` by controlling *where* the detection is active based on Place ID filtering.
+
+---
+
+### Networking and Bandwidth
+
+#### Adjust Cluster Sender Bandwidth Limits (Fake 0 KB/s)
+Sets various bandwidth limits related to cluster replication (potentially used for streaming or large world data) to maximum values.
+
+*   **Flags:**
+    *   `DFIntClusterSenderMaxJoinBandwidthBps`
+    *   `DFIntClusterSenderMaxUpdateBandwidthBps`
+    *   `DFIntClusterSenderMaxJoinBandwidthBpsScaling`
+    *   `DFIntInitialCacheClustersBandwidthKBpS`
+    *   `DFIntMaxClusterKBPerSecond`
+*   **JSON Example (Maximize Limits):**
+    ```json
+    {
+       "DFIntClusterSenderMaxJoinBandwidthBps": "2147483647",
+       "DFIntClusterSenderMaxUpdateBandwidthBps": "2147483647",
+       "DFIntClusterSenderMaxJoinBandwidthBpsScaling": "2147483647",
+       "DFIntInitialCacheClustersBandwidthKBpS": "2147483647",
+       "DFIntMaxClusterKBPerSecond": "2147483647"
+    }
+    ```
+*   **Purpose:** Controls various bandwidth allocations (Bytes per second or Kilobytes per second) for sending cluster data. Setting them to the maximum 32-bit integer value effectively removes any practical limit.
+*   **Default Values:** Moderate integer values.
+*   **Effects:** By removing bandwidth limits, this might allow cluster data to transmit faster if the network allows. The user associated this with achieving a "Fake 0 kb cluster" display in some network monitoring tool, likely because the unlimited rate prevents throttling that would normally show up as KB/s usage in the monitor.
+
+> [!NOTE]
+> Similar to other bandwidth limit removals, this could lead to network instability or higher actual bandwidth usage if the system tries to send extremely large amounts of cluster data at once.
+
+#### Induce Fake 0 Ping (Negative Bandwidth Limit)
+Attempts to create a "fake 0 ping" display by setting the data sender bandwidth limit to a large negative number.
+
+*   **Flag:** `DFIntDataSenderMaxBandwidthBps`
+*   **JSON Example:**
+    ```json
+    {
+       "DFIntDataSenderMaxBandwidthBps": "-2147483647"
+    }
+    ```
+*   **Purpose:** Sets the maximum bandwidth for the general data sender to an invalid negative value.
+*   **Default Value:** A positive integer.
+*   **Effects:** Likely causes the bandwidth limiting mechanism to malfunction or disable entirely due to the invalid input. This might interfere with how ping or network stats are calculated or displayed, potentially resulting in a `0` or nonsensical reading. It does not actually improve the connection quality.
+
+> [!CAUTION]
+> This is purely manipulating a display value by providing invalid input. It does not grant actual 0 ping and may cause underlying network instability or errors. Setting the value to a high *positive* number, conversely, was noted to potentially create a *fake high ping* display.
+
+#### Set Maximum Camera Zoom Distance (Infinite Zoom)
+Overrides the maximum distance the camera can be zoomed out.
+
+*   **Flag:** `FIntCameraMaxZoomDistance`
+*   **JSON Example (Effectively Infinite):**
+    ```json
+    {
+       "FIntCameraMaxZoomDistance": "2147483647"
+    }
+    ```
+*   **Purpose:** Controls the upper limit for the camera's zoom distance.
+*   **Default Value:** A moderate value (e.g., 400 or similar).
+*   **Effects:** Setting to a very high value (max 32-bit integer) allows zooming the camera out extremely far, much further than normally allowed.
+
+> [!IMPORTANT]
+> This only works in games where the developer has *not* explicitly set their own `CameraMaxZoomDistance` limit in their scripts. If the game enforces its own limit, this flag will be overridden.
+
+#### Adjust Mouse Input Queue/Debounce Time
+Modifies an internal timer related to mouse input processing, potentially affecting debounce or queueing.
+
+*   **Flag:** `FIntCLI20390_2`
+*   **JSON Example (Set to 0ms):**
+    ```json
+    {
+       "FIntCLI20390_2": "0"
+    }
+    ```
+*   **Purpose:** Interpreted as controlling a debounce time (in milliseconds) between registered mouse clicks or the size/timing of an input queue.
+*   **Default Value:** `16` (milliseconds).
+*   **Effects:** Setting to `0` removes the default 16ms delay/debounce. This could make rapid clicks register more quickly, potentially useful in spam-clicking scenarios (e.g., specific games like Blade Ball mentioned). Higher values would introduce delays.
+
+> [!NOTE]
+> The default value of `16` likely exists to prevent accidental double clicks from registering due to minor physical switch bounce in mice. Setting to `0` may make inputs feel slightly more responsive for rapid clicks but could potentially lead to unintended double inputs depending on the mouse hardware.
+
+#### Set Network Quality Responder Max Wait Time
+Adjusts the maximum time the network quality responder waits.
+
+*   **Flag:** `DFIntNetworkQualityResponderMaxWaitTime`
+*   **JSON Example (Very Low Wait Time):**
+    ```json
+    {
+       "DFIntNetworkQualityResponderMaxWaitTime": "1"
+    }
+    ```
+*   **Purpose:** Controls a timeout related to network quality assessment or response mechanisms.
+*   **Default Value:** `20` (likely milliseconds).
+*   **Effects:** Lowering the wait time might make network quality adjustments or responses happen faster.
+
+> [!CAUTION]
+> The user suggests lowering this value *only* for "HIGH END" systems/connections. Setting it too low (`1`) might cause network instability or issues if the system doesn't have enough time to properly assess or respond under normal network conditions.
+
+#### Enable New Escape Menu Settings Layout (Reorder)
+Activates an experimental variant of the in-game Settings menu with reordered items.
+
+*   **Flag:** `FFlagInExperienceMenuReorderFirstVariant2`
+*   **JSON Example:**
+    ```json
+    {
+       "FFlagInExperienceMenuReorderFirstVariant2": "true"
+    }
+    ```
+*   **Purpose:** Enables a specific experimental layout ("First Variant 2") for the Settings section within the escape menu.
+*   **Default Value:** `false`.
+*   **Effects:** Changes the order or grouping of options within the Settings menu. Purely a UI layout change.
+
+#### Prevent Task Scheduler Sleep/Yielding
+Forces the client's task scheduler to avoid entering sleep or yield states, potentially keeping worker threads more active.
+
+*   **Flags:**
+    *   `DFFlagTaskSchedulerAvoidSleep`
+    *   (Related mentioned: flags for `AvoidYieldInBackground`, `TaskCycles`)
+*   **JSON Example:**
+    ```json
+    {
+       "DFFlagTaskSchedulerAvoidSleep": "true"
+    }
+    ```
+*   **Purpose:** Prevents the task scheduler from pausing or reducing activity, ensuring worker threads remain active even when there might be brief idle periods.
+*   **Default Value:** `false`.
+*   **Effects:** Can potentially boost FPS or responsiveness by reducing latency associated with waking threads up. However, it **will likely increase CPU usage** as threads remain active instead of sleeping.
+
+> [!WARNING]
+> Enabling this (`True`) is noted to increase CPU usage. While it might improve performance, monitor CPU temperatures and overall system stability. Related flags controlling yielding and task cycles might offer further tuning but were not detailed.
+
+#### Physics Sender Rate Explanation (Reiteration)
+Provides context on the `DFIntS2PhysicsSenderRate` flag, emphasizing its role in synchronization.
+
+*   **Flag:** `DFIntS2PhysicsSenderRate`
+*   **JSON Example (Default):**
+    ```json
+    {
+       "DFIntS2PhysicsSenderRate": "15"
+    }
+    ```
+*   **Purpose:** Controls how often (times per second, Hz) the client sends physics state updates (position, velocity, jumping, etc.) to the server.
+*   **Default Value:** `15` (Hz).
+*   **Effects:**
+    *   **Increasing Value:** Sends updates more frequently, improving client-to-server synchronization. Player movements appear smoother and more accurate on the server and to other players, reducing perceived latency (makes actions feel like they happen at lower ping).
+    *   **Decreasing Value:** Sends updates less frequently, saving upstream bandwidth but worsening synchronization. Can lead to desync exploits or visual lag where actions appear delayed or jerky to others.
+*   **Misconception:** Noted that some communities mistakenly call this "Fast Dash" in certain games; it does not inherently speed up actions but improves their synchronization.
+
+> [!TIP]
+> Increasing `DFIntS2PhysicsSenderRate` (e.g., to `30` or `60`, ensuring `DFIntPhysicsSenderMaxBandwidthBps` is also sufficient) can make interactions feel more responsive, especially in physics-heavy games, provided the network connection can handle the increased data rate.
