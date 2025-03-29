@@ -2229,14 +2229,6 @@ Activates a debug feature within the physics simulation solver intended to detec
 *   **Default Value:** `false`.
 *   **Effects:** Unlikely to have any noticeable effect for regular players. May add slight overhead to the physics simulation for the detection logic.
 
-
-
-## Further Roblox FastFlags (FFlags) - Supplement 8
-
-This document details additional FFlags identified from recent discussions, continuing the series of supplements to the main FFlag overview.
-
----
-
 ### Audio
 
 #### Enable Direct Audio Occlusion
